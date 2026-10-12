@@ -12,7 +12,7 @@
 - **Dropped Exact Duplicate Barcodes:** 3
 - **Dropped Near-Duplicates (same brand, title, size):** 1,381
 - **Dropped Empty Post-Normalization Text:** 0
-- **Processing Time:** 15.39s
+- **Processing Time:** 14.37s
 - **Output Parquet:** `E:/nutrition-and-food-label-analyzer/data/clean/products.parquet`
 
 ---
