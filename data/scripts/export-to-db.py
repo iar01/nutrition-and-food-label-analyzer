@@ -1,9 +1,11 @@
+import io
 import sys
 from pathlib import Path
+
 import duckdb
 
 # Ensure UTF-8 output on Windows consoles for DuckDB table rendering
-if sys.platform == "win32":
+if sys.platform == "win32" and isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 # Dynamically resolve path to project root regardless of where script is executed from
