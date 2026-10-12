@@ -1,6 +1,7 @@
 """Calculate survival counts for Phase 1 subset rules using DuckDB."""
 
 from pathlib import Path
+
 import duckdb
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

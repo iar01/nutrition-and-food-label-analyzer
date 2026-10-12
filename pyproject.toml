@@ -24,6 +24,9 @@ dependencies = [
     "qdrant-client>=1.9.0",
     "python-dotenv>=1.0.1",
     "duckdb>=1.0.0",
+    "pandera>=0.19.0",
+    "pyarrow>=15.0.0",
+    "pandas>=2.2.0",
 ]
 
 [project.optional-dependencies]
@@ -71,6 +74,14 @@ check_untyped_defs = true
 no_implicit_optional = true
 show_error_codes = true
 mypy_path = "packages"
+
+[[tool.mypy.overrides]]
+module = [
+    "pandas.*",
+    "duckdb.*",
+    "pandera.*",
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "8.0"
