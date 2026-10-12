@@ -20,6 +20,6 @@ def test_postgres_connectivity() -> None:
 def test_qdrant_connectivity() -> None:
     """Verify that Qdrant is healthy and responding over HTTP."""
     settings = get_settings()
-    client = QdrantClient(url=settings.qdrant_url, timeout=5.0)
+    client = QdrantClient(url=settings.qdrant_url, timeout=5)
     collections = client.get_collections()
     assert collections is not None
