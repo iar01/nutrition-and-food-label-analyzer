@@ -78,7 +78,9 @@ def test_openai_compatible_smoke_end_to_end() -> None:
         )
 
         reply = completion.choices[0].message.content or ""
-        print(f"\n[OpenAI Compatible Smoke Test] Model '{settings.llm_model}' reply: '{reply.strip()}'")
+        print(
+            f"\n[OpenAI Compatible Smoke Test] Model '{settings.llm_model}' reply: '{reply.strip()}'"
+        )
         assert reply.strip() == "READY"
     finally:
         server.shutdown()
