@@ -1,15 +1,14 @@
 import argparse
+import math
 
 import pyarrow.parquet as pq
-from qdrant_client import models
-from tqdm import tqdm
-
 from labellens.config import settings
 from labellens.embeddings.sparse import Bm25SparseEmbedder
 from labellens.embeddings.text import BgeTextEmbedder
 from labellens.ids import point_id
 from labellens.retrieval.qdrant_setup import create_products_collection, get_client
-import math
+from qdrant_client import models
+from tqdm import tqdm
 
 # Left: the key this script uses. Right: the column in YOUR parquet.
 COLUMN_MAP = {
@@ -36,6 +35,7 @@ COLUMN_MAP = {
     "search_text": "search_text",
 }
 COLUMNS = list(COLUMN_MAP.values())
+
 
 def _num(x: float | None) -> float | None:
     """Float or None (turns NaN into None, because NaN breaks JSON)."""
@@ -81,13 +81,17 @@ def main() -> None:
     ap.add_argument("--batch-size", type=int, default=256)
     ap.add_argument("--collection", default=settings.products_collection)
     ap.add_argument("--text-model", default=settings.text_embed_model)
-    ap.add_argument("--recreate", action="store_true", help="delete and recreate the collection first")
+    ap.add_argument(
+        "--recreate", action="store_true", help="delete and recreate the collection first"
+    )
     args = ap.parse_args()
 
     client = get_client()
     text_emb = BgeTextEmbedder(model_name=args.text_model)
     sparse_emb = Bm25SparseEmbedder()
-    create_products_collection(client, name=args.collection, text_dim=text_emb.dim, recreate=args.recreate)
+    create_products_collection(
+        client, name=args.collection, text_dim=text_emb.dim, recreate=args.recreate
+    )
 
     pf = pq.ParquetFile(settings.clean_products_path)
     total = min(pf.metadata.num_rows, args.limit or pf.metadata.num_rows)

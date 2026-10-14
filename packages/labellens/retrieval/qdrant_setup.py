@@ -30,13 +30,23 @@ def create_products_collection(
     )
 
     keyword_fields = [
-        "nutriscore", "categories", "allergens",
-        "diet_vegan", "diet_vegetarian", "diet_gluten_free",
+        "nutriscore",
+        "categories",
+        "allergens",
+        "diet_vegan",
+        "diet_vegetarian",
+        "diet_gluten_free",
     ]
     for field in keyword_fields:
-        client.create_payload_index(name, field_name=field, field_schema=models.PayloadSchemaType.KEYWORD)
-    client.create_payload_index(name, field_name="nova", field_schema=models.PayloadSchemaType.INTEGER)
-    client.create_payload_index(name, field_name="has_image", field_schema=models.PayloadSchemaType.BOOL)
+        client.create_payload_index(
+            name, field_name=field, field_schema=models.PayloadSchemaType.KEYWORD
+        )
+    client.create_payload_index(
+        name, field_name="nova", field_schema=models.PayloadSchemaType.INTEGER
+    )
+    client.create_payload_index(
+        name, field_name="has_image", field_schema=models.PayloadSchemaType.BOOL
+    )
     print(f"Created collection {name!r}.")
 
 
@@ -52,8 +62,12 @@ def create_knowledge_collection(
 
     client.create_collection(
         collection_name=name,
-        vectors_config={"text_dense": models.VectorParams(size=text_dim, distance=models.Distance.COSINE)},
+        vectors_config={
+            "text_dense": models.VectorParams(size=text_dim, distance=models.Distance.COSINE)
+        },
     )
     for field in ["type", "key", "e_number", "category", "vegan"]:
-        client.create_payload_index(name, field_name=field, field_schema=models.PayloadSchemaType.KEYWORD)
+        client.create_payload_index(
+            name, field_name=field, field_schema=models.PayloadSchemaType.KEYWORD
+        )
     print(f"Created collection {name!r}.")

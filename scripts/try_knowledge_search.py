@@ -17,4 +17,6 @@ res = client.query_points(
 )
 for p in res.points:
     payload = p.payload or {}
-    print(f"{p.score:.3f}  [{payload.get('type')}]  {payload.get('title')}  vegan={payload.get('vegan')}")
+    print(
+        f"{p.score:.3f}  [{payload.get('type')}]  {payload.get('title')}  vegan={payload.get('vegan')}"
+    )

@@ -22,5 +22,7 @@ def choose_key(keys: list[str]) -> str | None:
         return english[0]
     if fronts:
         return fronts[0]
-    numeric = sorted((int(n.split(".")[0]), k) for k, n in names.items() if n.split(".")[0].isdigit())
+    numeric = sorted(
+        (int(n.split(".")[0]), k) for k, n in names.items() if n.split(".")[0].isdigit()
+    )
     return numeric[0][1] if numeric else None

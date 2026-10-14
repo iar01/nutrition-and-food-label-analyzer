@@ -20,7 +20,20 @@ for c in col_info[:30]:
 
 # Find key nutrition and metadata columns
 print("\n--- Key Metadata Columns Found ---")
-key_terms = ["code", "product_name", "brands", "categories", "ingredients", "nutriment", "nutriscore", "nova", "ecoscore", "countries", "image", "completeness"]
+key_terms = [
+    "code",
+    "product_name",
+    "brands",
+    "categories",
+    "ingredients",
+    "nutriment",
+    "nutriscore",
+    "nova",
+    "ecoscore",
+    "countries",
+    "image",
+    "completeness",
+]
 found = [c for c in col_info if any(k in c["name"].lower() for k in key_terms)]
 for f in found:
     print(f"  {f['name']}: {f['type']}")

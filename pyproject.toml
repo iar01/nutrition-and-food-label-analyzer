@@ -70,6 +70,9 @@ ignore = [
     "E501", # line length violations (handled by formatter)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*" = ["W291", "E402", "F401", "UP015", "I001"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -89,6 +92,9 @@ module = [
     "pandas.*",
     "duckdb.*",
     "pandera.*",
+    "open_clip.*",
+    "sentence_transformers.*",
+    "fastembed.*",
 ]
 ignore_missing_imports = true
 

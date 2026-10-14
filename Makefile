@@ -1,4 +1,4 @@
-.PHONY: setup-qdrant index download-images embed-images index-images index-knowledge
+.PHONY: setup-qdrant index download-images embed-images index-images index-knowledge test-retrieval eval-retrieval
 
 setup-qdrant:
 	uv run python scripts/setup_qdrant.py
@@ -17,3 +17,10 @@ index-images:
 
 index-knowledge:
 	uv run python scripts/index_knowledge.py
+
+test-retrieval:
+	uv run pytest tests/test_retrieval.py -v
+
+eval-retrieval:
+	uv run python scripts/eval_retrieval_ablations.py
+

@@ -48,8 +48,8 @@ flowchart TD
     P1 --> P2["Phase 2: Cleaning & Normalization - [x] Complete"]
     P2 --> P3["Phase 3: Structured Store Postgres - [x] Complete"]
     P3 --> P4["Phase 4: Embeddings & Vector DB Qdrant - [x] Complete"]
-    P4 --> P5["Phase 5: Hybrid & Multimodal Retrieval - [ ] Next Up"]
-    P5 --> P6["Phase 6: LangGraph Agents - [ ] Planned"]
+    P4 --> P5["Phase 5: Hybrid & Multimodal Retrieval - [x] Complete"]
+    P5 --> P6["Phase 6: LangGraph Agents - [ ] Next Up"]
     P6 --> P7["Phase 7: FastMCP Server - [ ] Planned"]
     P7 --> P8["Phase 8: FastAPI Gateway - [ ] Planned"]
     P8 --> P9["Phase 9: Next.js Frontend - [ ] Planned"]
@@ -60,9 +60,9 @@ flowchart TD
     classDef next fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff;
     classDef planned fill:#4b5563,stroke:#374151,stroke-width:1px,color:#fff;
 
-    class P0,P1,P2,P3,P4 done;
-    class P5 next;
-    class P6,P7,P8,P9,P10,P11 planned;
+    class P0,P1,P2,P3,P4,P5 done;
+    class P6 next;
+    class P7,P8,P9,P10,P11 planned;
 ```
 
 ### Phase Milestone Checklist
@@ -71,7 +71,7 @@ flowchart TD
 - [x] **Phase 2 — Cleaning and normalization (Week 2–3)**: GS1 barcode checksum validation, Pandera schema, clean Parquet (`products.parquet`).
 - [x] **Phase 3 — Structured store in PostgreSQL (Week 3)**: SQLAlchemy 2 declarative models, Alembic migrations, streaming COPY loader, trigram fuzzy indexes.
 - [x] **Phase 4 — Embeddings and the Vector Database (Week 3–5)**: Qdrant dual-collection setup, BGE dense, BM25 sparse, OpenCLIP image vectors, HNSW & INT8 scalar quantization benchmarks.
-- [ ] **Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6)**: Reciprocal Rank Fusion (RRF), cross-encoder reranker, multimodal router.
+- [x] **Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6)**: Reciprocal Rank Fusion (RRF), cross-encoder reranker, multimodal router.
 - [ ] **Phase 6 — Agents with LangGraph (Week 6–8)**: Multi-agent supervisor, additive analyst, nutrition/diet analyst, critic, human-in-the-loop.
 - [ ] **Phase 7 — The MCP server (Week 8)**: FastMCP server exposing tools, resources, and prompt templates.
 - [ ] **Phase 8 — API gateway with FastAPI (Week 8–9)**: Async API, SSE streaming chat, CORS, Pydantic v2 schemas.
@@ -413,8 +413,7 @@ Run OpenCLIP over the downloaded images in batches of 32–64 (half precision on
 client.update_vectors(
     collection_name="products",
     points=[
-        models.PointVectors(id=point_id, vector={"image_clip": vec})
-        for point_id, vec in batch
+        models.PointVectors(id=point_id, vector={"image_clip": vec}) for point_id, vec in batch
     ],
 )
 client.set_payload("products", payload={"has_image": "true"}, points=[p for p, _ in batch])
@@ -457,7 +456,7 @@ Record results in a table:
 3. Why does CLIP let a text query retrieve images?
 4. Why must payload indexes exist before you rely on filters at scale?
 5. Why is a two-pass index (text first, images later) safer than one big job?
-## 9. Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6) [ ] In Progress
+## 9. Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6) [x] Complete
 
 **Goal.** One `search()` interface that routes the five input types to the right retrieval path, with measured quality.
 
@@ -508,7 +507,7 @@ Late fusion for label photos: `score = w_text * text_score + w_image * image_sco
 
 **Checkpoint questions.** Why does hybrid beat dense alone on brand names and E-numbers? What does RRF do and why does it avoid score calibration problems? When is a reranker not worth its latency?
 
-## 10. Phase 6 — Agents with LangGraph (Week 6–8) [ ] Planned
+## 10. Phase 6 — Agents with LangGraph (Week 6–8) [ ] Next Up
 
 **Goal.** A multi-agent graph that takes any input type and returns a grounded, cited, profile-aware answer.
 
@@ -746,8 +745,8 @@ if __name__ == "__main__":
 | 2 | Phase 1 finish, Phase 2 | EDA notebook, subset spec, cleaning pipeline v1 | [x] **Complete** |
 | 3 | Phase 2 finish, Phase 3 | Clean Parquet, Postgres loaded, repository tests | [x] **Complete** |
 | 4–5 | Phase 4 | Embeddings and both Qdrant collections, experiments table | [x] **Complete** |
-| 5–6 | Phase 5 | Hybrid and multimodal retrieval, golden set, ablations | [ ] *Next Up* |
-| 6–8 | Phase 6 | LangGraph agents, tracing, agent scenarios | [ ] *Planned* |
+| 5–6 | Phase 5 | Hybrid and multimodal retrieval, golden set, ablations | [x] **Complete** |
+| 6–8 | Phase 6 | LangGraph agents, tracing, agent scenarios | [ ] *Next Up* |
 | 8 | Phase 7 | MCP server consumed by agent and external client | [ ] *Planned* |
 | 8–9 | Phase 8 | Streaming API | [ ] *Planned* |
 | 9–10 | Phase 9 | Frontend | [ ] *Planned* |

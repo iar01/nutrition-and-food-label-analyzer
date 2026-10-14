@@ -4,13 +4,12 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from qdrant_client import models
-from tqdm import tqdm
-
 from labellens.config import settings
 from labellens.embeddings.text import BgeTextEmbedder
 from labellens.knowledge.chunking import chunk_words
 from labellens.retrieval.qdrant_setup import create_knowledge_collection, get_client
+from qdrant_client import models
+from tqdm import tqdm
 
 KNOWLEDGE_DIR = Path("docs/knowledge")
 EXTRA_FIELDS = ("e_number", "category", "vegan")

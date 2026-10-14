@@ -57,8 +57,8 @@ flowchart LR
     P1 --> P2["Phase 2: Cleaning ✅"]
     P2 --> P3["Phase 3: Postgres ✅"]
     P3 --> P4["Phase 4: Vectors ✅"]
-    P4 --> P5["Phase 5: Retrieval 🔄"]
-    P5 --> P6["Phase 6: Agents ⏹"]
+    P4 --> P5["Phase 5: Retrieval ✅"]
+    P5 --> P6["Phase 6: Agents 🔄"]
     P6 --> P7["Phase 7: MCP ⏹"]
     P7 --> P8["Phase 8: API ⏹"]
     P8 --> P9["Phase 9: Web ⏹"]
@@ -69,9 +69,9 @@ flowchart LR
     classDef current fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
     classDef pending fill:#6b7280,stroke:#4b5563,stroke-width:1px,color:#fff;
 
-    class P0,P1,P2,P3,P4 done;
-    class P5 current;
-    class P6,P7,P8,P9,P10,P11 pending;
+    class P0,P1,P2,P3,P4,P5 done;
+    class P6 current;
+    class P7,P8,P9,P10,P11 pending;
 ```
 
 ### Phase Progress Checklist
@@ -80,13 +80,24 @@ flowchart LR
 - [x] **Phase 2: Cleaning & Normalization** — GS1 barcode checksum validation, Pandera schema enforcement, data quality profiling, `products.parquet` generated.
 - [x] **Phase 3: Structured PostgreSQL Store** — SQLAlchemy 2 declarative models, Alembic migrations, high-throughput streaming COPY loader, pg_trgm fuzzy search indexes.
 - [x] **Phase 4: Embeddings & Vector Database** — Qdrant dual-collection setup (`products` & `knowledge`), BGE dense text embeddings, FastEmbed BM25 sparse vectors, OpenCLIP image vectors, HNSW tuning, INT8 scalar quantization benchmarks.
-- [ ] **Phase 5: Hybrid & Multimodal Retrieval** — Reciprocal Rank Fusion (RRF), cross-encoder reranking (`bge-reranker-base`), multimodal query router.
+- [x] **Phase 5: Hybrid & Multimodal Retrieval** — Reciprocal Rank Fusion (RRF), cross-encoder reranking (`BAAI/bge-reranker-base`), multimodal query router, golden set ablation benchmarks.
 - [ ] **Phase 6: Agents with LangGraph** — Stateful multi-agent graph (router, additive analyst, nutrition/diet analyst, critic validation node).
 - [ ] **Phase 7: FastMCP Server** — Standard Model Context Protocol server exposing tools, resources, and prompt templates.
 - [ ] **Phase 8: API Gateway with FastAPI** — Async API, Server-Sent Events (SSE) streaming chat responses, Pydantic v2 schemas.
 - [ ] **Phase 9: Frontend with Next.js** — Mobile-first web application with in-browser camera barcode scanning and streaming chat.
 - [ ] **Phase 10: Formal Evaluation** — Golden evaluation datasets for allergen detection, retrieval Recall/MRR, and multi-agent tracing.
 - [ ] **Phase 11: Production Hardening & Cloud Deployment** — Multi-stage Docker packaging, GitHub Container Registry, cloud deployment on free tiers.
+
+### Phase 5 Retrieval Benchmark Results (Golden Set: 120 Queries)
+
+| Retrieval Pipeline | Recall@1 | Recall@5 | Recall@10 | MRR | Avg Latency (ms) |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **1. Dense Only (BGE)** | 0.608 | 0.775 | 0.808 | 0.681 | 27.2 ms |
+| **2. Sparse Only (BM25)** | 0.658 | 0.808 | 0.858 | 0.723 | 10.9 ms |
+| **3. Hybrid RRF (Dense + BM25)** | 0.658 | 0.808 | 0.850 | 0.730 | 30.2 ms |
+| **4. Hybrid RRF + Cross-Encoder Reranker** | **0.667** | **0.808** | **0.858** | **0.736** | 195.8 ms |
+
+*See [`docs/retrieval_results.md`](docs/retrieval_results.md) for detailed ablation analysis.*
 
 ---
 

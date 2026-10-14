@@ -1,13 +1,12 @@
 import argparse
 
+import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import pandas as pd
-from PIL import Image
-from tqdm import tqdm
-
 from labellens.config import settings
 from labellens.embeddings.image import ClipImageEmbedder
+from PIL import Image
+from tqdm import tqdm
 
 SHARD_DIR = settings.embeddings_dir / "image_clip"
 SHARD_SIZE = 2048
@@ -65,10 +64,12 @@ def main() -> None:
             out_codes.extend(ok_codes)
             out_vecs.extend(v.tolist() for v in vecs)
 
-        table = pa.table({
-            "code": out_codes,
-            "vector": pa.array(out_vecs, type=pa.list_(pa.float32())),
-        })
+        table = pa.table(
+            {
+                "code": out_codes,
+                "vector": pa.array(out_vecs, type=pa.list_(pa.float32())),
+            }
+        )
         pq.write_table(table, SHARD_DIR / f"shard_{shard_idx:05d}.parquet")
         shard_idx += 1
 

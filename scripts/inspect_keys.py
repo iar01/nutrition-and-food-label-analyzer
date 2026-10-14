@@ -1,11 +1,12 @@
 import duckdb
-
 from labellens.config import settings
 from labellens.data.image_keys import key_prefix
 
-codes = duckdb.sql(
-    f"SELECT code FROM '{settings.clean_products_path}' USING SAMPLE 8"
-).df()["code"].tolist()
+codes = (
+    duckdb.sql(f"SELECT code FROM '{settings.clean_products_path}' USING SAMPLE 8")
+    .df()["code"]
+    .tolist()
+)
 prefixes = {key_prefix(c): c for c in codes}
 in_list = ", ".join(f"'{p}'" for p in prefixes)
 
@@ -22,5 +23,7 @@ for (key,) in rows:
 
 for prefix, code in prefixes.items():
     print(f"\n{code}  ->  {prefix}")
-    for name in found.get(prefix, ["(NO KEYS FOUND, my prefix rule may be wrong for this barcode)"]):
+    for name in found.get(
+        prefix, ["(NO KEYS FOUND, my prefix rule may be wrong for this barcode)"]
+    ):
         print("   ", name)

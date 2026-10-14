@@ -1,12 +1,11 @@
 from pathlib import Path
 
 import pyarrow.parquet as pq
-from qdrant_client import models
-from tqdm import tqdm
-
 from labellens.config import settings
 from labellens.ids import point_id
 from labellens.retrieval.qdrant_setup import get_client
+from qdrant_client import models
+from tqdm import tqdm
 
 SHARD_DIR = settings.embeddings_dir / "image_clip"
 BATCH = 256
@@ -24,7 +23,7 @@ def main() -> None:
                 collection_name=settings.products_collection,
                 points=[
                     models.PointVectors(id=pid, vector={"image_clip": r["vector"]})
-                    for pid, r in zip(ids, chunk)
+                    for pid, r in zip(ids, chunk, strict=False)
                 ],
                 wait=True,
             )

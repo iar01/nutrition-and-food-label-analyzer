@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -10,7 +10,7 @@ BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
 
 class BgeTextEmbedder(TextEmbedder):
-    def __init__(self, model_name: str | None = None, use_query_prefix: bool = True)-> None:
+    def __init__(self, model_name: str | None = None, use_query_prefix: bool = True) -> None:
         self.model_name = model_name or settings.text_embed_model
         self.use_query_prefix = use_query_prefix
         self.model = SentenceTransformer(self.model_name)

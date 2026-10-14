@@ -1,16 +1,15 @@
 import argparse
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import duckdb
 import httpx
 import pandas as pd
-from PIL import Image
-from tqdm import tqdm
-
 from labellens.config import settings
 from labellens.data.image_keys import choose_key, key_prefix
+from PIL import Image
+from tqdm import tqdm
 
 BASE_URL = "https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/"
 MANIFEST = settings.images_dir / "manifest.parquet"
@@ -34,12 +33,19 @@ def build_plan(limit: int | None, seed: int) -> pd.DataFrame:
         JOIN wanted w ON k.prefix = w.prefix
     """).df()
 
-    chosen = found.groupby("code")["key"].apply(lambda s: choose_key(list(s))).rename("key").reset_index()
+    chosen = (
+        found.groupby("code")["key"]
+        .apply(lambda s: choose_key(list(s)))
+        .rename("key")
+        .reset_index()
+    )
     plan = codes[["code"]].merge(chosen, on="code", how="left")
 
     n_front = plan["key"].fillna("").str.contains("/front_").sum()
     n_none = plan["key"].isna().sum()
-    print(f"products: {len(plan)} | front image: {n_front} | other numbered image: {len(plan) - n_front - n_none} | no image: {n_none}")
+    print(
+        f"products: {len(plan)} | front image: {n_front} | other numbered image: {len(plan) - n_front - n_none} | no image: {n_none}"
+    )
     return plan[plan["key"].notna()]
 
 
@@ -66,7 +72,9 @@ def fetch(client: httpx.Client, code: str, key: str) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--limit", type=int, default=None, help="random sample of N products (pilot run)")
+    ap.add_argument(
+        "--limit", type=int, default=None, help="random sample of N products (pilot run)"
+    )
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--workers", type=int, default=8)
     args = ap.parse_args()
@@ -81,13 +89,15 @@ def main() -> None:
             results.append(f.result())
 
     new = pd.DataFrame(results)
-    new["downloaded_at"] = datetime.now(timezone.utc).isoformat()
+    new["downloaded_at"] = datetime.now(UTC).isoformat()
     if MANIFEST.exists():
         new = pd.concat([pd.read_parquet(MANIFEST), new]).drop_duplicates("code", keep="last")
     new.to_parquet(MANIFEST, index=False)
 
     print(new["status"].value_counts().to_string())
-    print(f"total on disk: {new.loc[new['status'].isin(['ok', 'exists']), 'bytes'].sum() / 1e6:.1f} MB")
+    print(
+        f"total on disk: {new.loc[new['status'].isin(['ok', 'exists']), 'bytes'].sum() / 1e6:.1f} MB"
+    )
 
 
 if __name__ == "__main__":
