@@ -40,23 +40,80 @@ Learning rule: hand-write the core pieces (data pipeline, embedding and retrieva
 
 **Non-goals:** medical advice, scraping, paid APIs, storing personal health data on a server.
 
+## 1.1 Phase Progress & Implementation Status
+
+```mermaid
+flowchart TD
+    P0["Phase 0: Project Setup - [x] Complete"] --> P1["Phase 1: Download & EDA - [x] Complete"]
+    P1 --> P2["Phase 2: Cleaning & Normalization - [x] Complete"]
+    P2 --> P3["Phase 3: Structured Store Postgres - [x] Complete"]
+    P3 --> P4["Phase 4: Embeddings & Vector DB Qdrant - [x] Complete"]
+    P4 --> P5["Phase 5: Hybrid & Multimodal Retrieval - [ ] Next Up"]
+    P5 --> P6["Phase 6: LangGraph Agents - [ ] Planned"]
+    P6 --> P7["Phase 7: FastMCP Server - [ ] Planned"]
+    P7 --> P8["Phase 8: FastAPI Gateway - [ ] Planned"]
+    P8 --> P9["Phase 9: Next.js Frontend - [ ] Planned"]
+    P9 --> P10["Phase 10: Formal Evals - [ ] Planned"]
+    P10 --> P11["Phase 11: Production Hardening - [ ] Planned"]
+
+    classDef done fill:#059669,stroke:#047857,stroke-width:2px,color:#fff;
+    classDef next fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff;
+    classDef planned fill:#4b5563,stroke:#374151,stroke-width:1px,color:#fff;
+
+    class P0,P1,P2,P3,P4 done;
+    class P5 next;
+    class P6,P7,P8,P9,P10,P11 planned;
+```
+
+### Phase Milestone Checklist
+- [x] **Phase 0 — Project setup (Week 1)**: uv, pyproject, Docker Compose (Postgres, Qdrant), healthchecks, CI tooling, Ollama smoke test.
+- [x] **Phase 1 — Download and understand the data (Week 1–2)**: Open Food Facts Parquet, in-place DuckDB exploration, subset specification.
+- [x] **Phase 2 — Cleaning and normalization (Week 2–3)**: GS1 barcode checksum validation, Pandera schema, clean Parquet (`products.parquet`).
+- [x] **Phase 3 — Structured store in PostgreSQL (Week 3)**: SQLAlchemy 2 declarative models, Alembic migrations, streaming COPY loader, trigram fuzzy indexes.
+- [x] **Phase 4 — Embeddings and the Vector Database (Week 3–5)**: Qdrant dual-collection setup, BGE dense, BM25 sparse, OpenCLIP image vectors, HNSW & INT8 scalar quantization benchmarks.
+- [ ] **Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6)**: Reciprocal Rank Fusion (RRF), cross-encoder reranker, multimodal router.
+- [ ] **Phase 6 — Agents with LangGraph (Week 6–8)**: Multi-agent supervisor, additive analyst, nutrition/diet analyst, critic, human-in-the-loop.
+- [ ] **Phase 7 — The MCP server (Week 8)**: FastMCP server exposing tools, resources, and prompt templates.
+- [ ] **Phase 8 — API gateway with FastAPI (Week 8–9)**: Async API, SSE streaming chat, CORS, Pydantic v2 schemas.
+- [ ] **Phase 9 — Frontend with Next.js (Week 9–10)**: Mobile-responsive UI, camera barcode scanning, live streaming chat.
+- [ ] **Phase 10 — Evaluation (continuous, formalized in Week 10)**: Golden evaluation datasets, allergen detection accuracy, retrieval recall/MRR.
+- [ ] **Phase 11 — Production hardening and free deployment (Week 10–11)**: Multi-stage Docker, GitHub Container Registry, cloud deployment on free tiers.
+
 ## 2. Architecture
 
+### 2.1 Online System Architecture
+
+```mermaid
+graph TD
+    User["User / Browser"] --> UI["Next.js Frontend"]
+    UI -->|"REST / SSE Streaming"| Gateway["FastAPI Gateway"]
+    Gateway --> AgentGraph["LangGraph Agent Graph"]
+    AgentGraph --> MCPClient["MCP Client"]
+    MCPClient --> MCPServer["FastMCP Server"]
+
+    subgraph Stores["Data Stores & Inference"]
+        MCPServer --> PG[("PostgreSQL 16: Products, Rules")]
+        MCPServer --> QdrantProd[("Qdrant Products: Dense, Sparse, CLIP")]
+        MCPServer --> QdrantKnow[("Qdrant Knowledge: Additives, Diets")]
+        MCPServer --> Vision["OCR & CLIP Vision Engine"]
+    end
+
+    AgentGraph -.->|"OpenAI-compatible API"| LLM["Ollama Dev / Free Cloud Prod"]
 ```
-Next.js UI ──► FastAPI gateway ──► LangGraph agent graph ──► MCP client
-                   │                                            │
-                   │                                    MCP server (FastMCP)
-                   │                       ┌───────────────┼────────────────┐
-                   ▼                       ▼               ▼                ▼
-              Postgres                Qdrant:          Qdrant:          OCR + CLIP
-              (products, users,       products         knowledge        (image path)
-               profiles)              dense+image+     (additives,
-                                      sparse           diet rules)
 
-LLM: OpenAI-compatible endpoint → Ollama (dev) / free API tier (prod)
+### 2.2 Offline Data & Embedding Pipeline
 
-Offline pipeline:
-Open Food Facts Parquet → DuckDB cleaning → clean Parquet → Postgres + embeddings → Qdrant
+```mermaid
+flowchart LR
+    OFF["Open Food Facts Parquet"] --> DuckDB["DuckDB Cleaning Engine"]
+    DuckDB --> Clean["Clean Parquet & Pandera Schema"]
+    Clean --> PG[("PostgreSQL Store")]
+    Clean --> Dense["BGE Dense & BM25 Sparse Embeddings"]
+    Dense --> Qdrant[("Qdrant Products Collection")]
+    S3["OFF AWS S3 Bucket"] --> Images["400px Images"]
+    Images --> CLIP["OpenCLIP ViT-B/32"]
+    CLIP --> Qdrant
+    Cards["Additives & Diet YAML"] --> Knowledge[("Qdrant Knowledge Collection")]
 ```
 
 **Design principles**
@@ -106,7 +163,7 @@ Open Food Facts Parquet → DuckDB cleaning → clean Parquet → Postgres + emb
 - Keep prompts short, keep context around 8k tokens, and put retrieved evidence in a compact format.
 - Anything safety-relevant (allergens, diet verdicts) is computed outside the LLM.
 
-## 4. Phase 0 — Project setup (Week 1)
+## 4. Phase 0 — Project setup (Week 1) [x] Complete
 
 **Goal.** A repo where one command starts the infrastructure, tests run, CI is green and the LLM answers.
 
@@ -147,7 +204,7 @@ labellens/
 
 **Checkpoint questions.** What is the difference between a Docker image, container and volume? Why keep config in environment variables? What does uv lock give you that a plain requirements file does not?
 
-## 5. Phase 1 — Download and understand the data (Week 1–2)
+## 5. Phase 1 — Download and understand the data (Week 1–2) [x] Complete
 
 **Goal.** Raw data on disk, understood, with a written decision about which subset you will use.
 
@@ -193,7 +250,7 @@ con.sql("""
 
 **Checkpoint questions.** Why is Parquet faster than CSV for this? What does ODbL require of you? How many products survive each subset rule, and which rule removes the most?
 
-## 6. Phase 2 — Cleaning and normalization (Week 2–3)
+## 6. Phase 2 — Cleaning and normalization (Week 2–3) [x] Complete
 
 **Goal.** A reproducible pipeline that turns raw data into one clean, validated Parquet file plus a data-quality report.
 
@@ -229,7 +286,7 @@ def gs1_valid(code: str) -> bool:
 
 **Checkpoint questions.** Why do we keep `unknown` instead of defaulting to `no`? What happens if you run the pipeline twice? Which cleaning rule changed the most rows, and was that expected?
 
-## 7. Phase 3 — Structured store in PostgreSQL (Week 3)
+## 7. Phase 3 — Structured store in PostgreSQL (Week 3) [x] Complete
 
 **Goal.** Clean data loaded into Postgres with a small, tested data-access layer. Postgres answers exact questions (barcode, filters, joins); Qdrant answers fuzzy ones.
 
@@ -262,7 +319,7 @@ Add a trigram (`pg_trgm`) GIN index on name and brand for typo-tolerant lookup, 
 
 **Checkpoint questions.** When would you pick JSONB over a normalized table? Why does a barcode lookup need no vector search? What does the trigram index buy you over `ILIKE`?
 
-# Phase 4 — Embeddings and the Vector Database (Week 3–5)
+## 8. Phase 4 — Embeddings and the Vector Database (Week 3–5) [x] Complete
 
 **Project:** LabelLens, Nutrition & Food Label Analyzer
 
@@ -400,7 +457,7 @@ Record results in a table:
 3. Why does CLIP let a text query retrieve images?
 4. Why must payload indexes exist before you rely on filters at scale?
 5. Why is a two-pass index (text first, images later) safer than one big job?
-## 9. Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6)
+## 9. Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6) [ ] In Progress
 
 **Goal.** One `search()` interface that routes the five input types to the right retrieval path, with measured quality.
 
@@ -451,7 +508,7 @@ Late fusion for label photos: `score = w_text * text_score + w_image * image_sco
 
 **Checkpoint questions.** Why does hybrid beat dense alone on brand names and E-numbers? What does RRF do and why does it avoid score calibration problems? When is a reranker not worth its latency?
 
-## 10. Phase 6 — Agents with LangGraph (Week 6–8)
+## 10. Phase 6 — Agents with LangGraph (Week 6–8) [ ] Planned
 
 **Goal.** A multi-agent graph that takes any input type and returns a grounded, cited, profile-aware answer.
 
@@ -515,7 +572,7 @@ class AgentState(TypedDict):
 
 **Checkpoint questions.** What is a reducer and why does `evidence` need one? Why compute verdicts outside the LLM? What would break if the critic were removed, and how would your evals show it?
 
-## 11. Phase 7 — The MCP server (Week 8)
+## 11. Phase 7 — The MCP server (Week 8) [ ] Planned
 
 **Goal.** Your retrieval and data tools exposed through a Model Context Protocol server, consumed by your own agent and by any external MCP client.
 
@@ -567,7 +624,7 @@ if __name__ == "__main__":
 
 **Checkpoint questions.** When is something a resource rather than a tool? Why does stdio not need authentication but HTTP does? What can go wrong if a tool description is vague?
 
-## 12. Phase 8 — API gateway with FastAPI (Week 8–9)
+## 12. Phase 8 — API gateway with FastAPI (Week 8–9) [ ] Planned
 
 **Goal.** A typed, streaming HTTP API in front of the agent graph.
 
@@ -595,7 +652,7 @@ if __name__ == "__main__":
 
 **Checkpoint questions.** Why SSE instead of WebSockets here? What does readiness check that liveness does not? How do you test an endpoint that calls an LLM?
 
-## 13. Phase 9 — Frontend with Next.js (Week 9–10)
+## 13. Phase 9 — Frontend with Next.js (Week 9–10) [ ] Planned
 
 **Goal.** A clean, mobile-friendly UI that makes the system usable in a supermarket aisle.
 
@@ -618,7 +675,7 @@ if __name__ == "__main__":
 
 **Checkpoint questions.** Why keep the profile client-side? How does the UI communicate uncertainty? What happens when the camera permission is denied?
 
-## 14. Phase 10 — Evaluation (continuous, formalized in Week 10)
+## 14. Phase 10 — Evaluation (continuous, formalized in Week 10) [ ] Planned
 
 **Goal.** Numbers you can put in the README and defend in an interview.
 
@@ -639,7 +696,7 @@ if __name__ == "__main__":
 
 **Deliverable.** `make eval` produces a results table; the README shows current numbers and the date they were measured.
 
-## 15. Phase 11 — Production hardening and free deployment (Week 10–11)
+## 15. Phase 11 — Production hardening and free deployment (Week 10–11) [ ] Planned
 
 **Goal.** A public demo that stays up on free tiers, with the engineering practices a real service needs.
 
@@ -683,19 +740,19 @@ if __name__ == "__main__":
 
 ## 17. Timeline
 
-| Week | Focus | Milestone |
-| --- | --- | --- |
-| 1 | Phase 0 setup, start Phase 1 | Repo, Compose, CI, LLM smoke test; data downloaded |
-| 2 | Phase 1 finish, Phase 2 | EDA notebook, subset spec, cleaning pipeline v1 |
-| 3 | Phase 2 finish, Phase 3 | Clean Parquet, Postgres loaded, repository tests |
-| 4–5 | Phase 4 | Embeddings and both Qdrant collections, experiments table |
-| 5–6 | Phase 5 | Hybrid and multimodal retrieval, golden set, ablations |
-| 6–8 | Phase 6 | LangGraph agents, tracing, agent scenarios |
-| 8 | Phase 7 | MCP server consumed by agent and external client |
-| 8–9 | Phase 8 | Streaming API |
-| 9–10 | Phase 9 | Frontend |
-| 10 | Phase 10 | Evaluation report, README numbers |
-| 10–11 | Phase 11 | Public deployment, runbook, demo video |
+| Week | Focus | Milestone | Status |
+| :---: | --- | --- | :---: |
+| 1 | Phase 0 setup, start Phase 1 | Repo, Compose, CI, LLM smoke test; data downloaded | [x] **Complete** |
+| 2 | Phase 1 finish, Phase 2 | EDA notebook, subset spec, cleaning pipeline v1 | [x] **Complete** |
+| 3 | Phase 2 finish, Phase 3 | Clean Parquet, Postgres loaded, repository tests | [x] **Complete** |
+| 4–5 | Phase 4 | Embeddings and both Qdrant collections, experiments table | [x] **Complete** |
+| 5–6 | Phase 5 | Hybrid and multimodal retrieval, golden set, ablations | [ ] *Next Up* |
+| 6–8 | Phase 6 | LangGraph agents, tracing, agent scenarios | [ ] *Planned* |
+| 8 | Phase 7 | MCP server consumed by agent and external client | [ ] *Planned* |
+| 8–9 | Phase 8 | Streaming API | [ ] *Planned* |
+| 9–10 | Phase 9 | Frontend | [ ] *Planned* |
+| 10 | Phase 10 | Evaluation report, README numbers | [ ] *Planned* |
+| 10–11 | Phase 11 | Public deployment, runbook, demo video | [ ] *Planned* |
 
 If you fall behind, cut scope in this order: optional VLM experiment, reranker, compare tool, alternatives agent, Playwright tests. Do not cut evaluation, the deterministic diet rules or the MCP server; those are what make the project stand out.
 

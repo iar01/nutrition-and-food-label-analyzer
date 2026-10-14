@@ -6,18 +6,39 @@
 
 ## 1. Architecture Overview
 
-```text
-Next.js UI ──► FastAPI Gateway ──► LangGraph Agent Graph ──► MCP Client
-                   │                                            │
-                   │                                    MCP Server (FastMCP)
-                   │                       ┌───────────────┼────────────────┐
-                   ▼                       ▼               ▼                ▼
-              Postgres                Qdrant:          Qdrant:          OCR + CLIP
-              (products, users,       products         knowledge        (image path)
-               profiles)              dense+image+     (additives,
-                                      sparse           diet rules)
+### 1.1 Online Inference Architecture
 
-LLM: OpenAI-compatible endpoint → Ollama (local dev) / free API tier (prod)
+```mermaid
+graph TD
+    User["User / Browser Client"] --> UI["Next.js Frontend (Scanner & Chat)"]
+    UI -->|"REST & SSE Streaming"| Gateway["FastAPI Gateway"]
+    Gateway --> AgentGraph["LangGraph Multi-Agent Orchestrator"]
+    AgentGraph --> MCPClient["MCP Client Layer"]
+    MCPClient --> MCPServer["FastMCP Server"]
+
+    subgraph Stores["Deterministic Stores & Inference"]
+        MCPServer --> PG[("PostgreSQL 16: Products, Rules, Profiles")]
+        MCPServer --> QdrantProd[("Qdrant: Products (Dense + Sparse + CLIP)")]
+        MCPServer --> QdrantKnow[("Qdrant: Knowledge (Additives, Diets)")]
+        MCPServer --> Vision["OCR & OpenCLIP Engine"]
+    end
+
+    AgentGraph -.->|"OpenAI-compatible Endpoint"| LLM["Local Ollama / Cloud LLM API"]
+```
+
+### 1.2 Offline Data & Embedding Pipeline
+
+```mermaid
+flowchart LR
+    OFF["Open Food Facts Parquet"] --> DuckDB["DuckDB Cleaning Engine"]
+    DuckDB --> Clean["Clean Parquet & Pandera Schema"]
+    Clean --> PG[("PostgreSQL Store")]
+    Clean --> Dense["BGE Dense & BM25 Sparse Embeddings"]
+    Dense --> Qdrant[("Qdrant Products Collection")]
+    S3["OFF AWS S3 Bucket"] --> Images["400px Images"]
+    Images --> CLIP["OpenCLIP ViT-B/32"]
+    CLIP --> Qdrant
+    Cards["Additives & Diet YAML"] --> Knowledge[("Qdrant Knowledge Collection")]
 ```
 
 ### Core Design Principles
@@ -28,7 +49,48 @@ LLM: OpenAI-compatible endpoint → Ollama (local dev) / free API tier (prod)
 
 ---
 
-## 2. Requirements
+## 2. Project Roadmap & Implementation Status
+
+```mermaid
+flowchart LR
+    P0["Phase 0: Setup ✅"] --> P1["Phase 1: EDA ✅"]
+    P1 --> P2["Phase 2: Cleaning ✅"]
+    P2 --> P3["Phase 3: Postgres ✅"]
+    P3 --> P4["Phase 4: Vectors ✅"]
+    P4 --> P5["Phase 5: Retrieval 🔄"]
+    P5 --> P6["Phase 6: Agents ⏹"]
+    P6 --> P7["Phase 7: MCP ⏹"]
+    P7 --> P8["Phase 8: API ⏹"]
+    P8 --> P9["Phase 9: Web ⏹"]
+    P9 --> P10["Phase 10: Evals ⏹"]
+    P10 --> P11["Phase 11: Deploy ⏹"]
+
+    classDef done fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff;
+    classDef current fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
+    classDef pending fill:#6b7280,stroke:#4b5563,stroke-width:1px,color:#fff;
+
+    class P0,P1,P2,P3,P4 done;
+    class P5 current;
+    class P6,P7,P8,P9,P10,P11 pending;
+```
+
+### Phase Progress Checklist
+- [x] **Phase 0: Project Setup** — `uv`, Python 3.12, Docker Compose (PostgreSQL 16 & Qdrant), healthchecks, CI quality tooling, Ollama smoke test.
+- [x] **Phase 1: Download & Understand Data** — Open Food Facts bulk Parquet ingestion, in-place DuckDB exploration, subset filtration rules.
+- [x] **Phase 2: Cleaning & Normalization** — GS1 barcode checksum validation, Pandera schema enforcement, data quality profiling, `products.parquet` generated.
+- [x] **Phase 3: Structured PostgreSQL Store** — SQLAlchemy 2 declarative models, Alembic migrations, high-throughput streaming COPY loader, pg_trgm fuzzy search indexes.
+- [x] **Phase 4: Embeddings & Vector Database** — Qdrant dual-collection setup (`products` & `knowledge`), BGE dense text embeddings, FastEmbed BM25 sparse vectors, OpenCLIP image vectors, HNSW tuning, INT8 scalar quantization benchmarks.
+- [ ] **Phase 5: Hybrid & Multimodal Retrieval** — Reciprocal Rank Fusion (RRF), cross-encoder reranking (`bge-reranker-base`), multimodal query router.
+- [ ] **Phase 6: Agents with LangGraph** — Stateful multi-agent graph (router, additive analyst, nutrition/diet analyst, critic validation node).
+- [ ] **Phase 7: FastMCP Server** — Standard Model Context Protocol server exposing tools, resources, and prompt templates.
+- [ ] **Phase 8: API Gateway with FastAPI** — Async API, Server-Sent Events (SSE) streaming chat responses, Pydantic v2 schemas.
+- [ ] **Phase 9: Frontend with Next.js** — Mobile-first web application with in-browser camera barcode scanning and streaming chat.
+- [ ] **Phase 10: Formal Evaluation** — Golden evaluation datasets for allergen detection, retrieval Recall/MRR, and multi-agent tracing.
+- [ ] **Phase 11: Production Hardening & Cloud Deployment** — Multi-stage Docker packaging, GitHub Container Registry, cloud deployment on free tiers.
+
+---
+
+## 3. Requirements
 
 - **Operating System:** Windows 10/11 (WSL2), Linux, or macOS
 - **Python:** 3.12 (managed via `uv`)
@@ -38,7 +100,7 @@ LLM: OpenAI-compatible endpoint → Ollama (local dev) / free API tier (prod)
 
 ---
 
-## 3. Quick Start
+## 4. Quick Start
 
 ### 1. Clone & Set Up Python Environment
 ```bash
@@ -97,7 +159,7 @@ pytest -m "not smoke"
 
 ---
 
-## 4. Project Layout
+## 5. Project Layout
 
 ```text
 nutrition-and-food-label-analyzer/
@@ -127,7 +189,7 @@ nutrition-and-food-label-analyzer/
 
 ---
 
-## 5. Data & Attribution
+## 6. Data & Attribution
 
 - **Source:** Open Food Facts (`openfoodfacts/product-database`)
 - **License:** Open Database License (ODbL) for product data; CC BY-SA for packaging images.
@@ -135,12 +197,12 @@ nutrition-and-food-label-analyzer/
 
 ---
 
-## 6. Disclaimer
+## 7. Disclaimer
 
 LabelLens is an educational and informational tool. **It does not provide medical or clinical nutritional advice.** Always consult healthcare professionals for acute dietary and severe allergic conditions.
 
 ---
 
-## 7. License
+## 8. License
 
 Code is licensed under the [MIT License](LICENSE).
