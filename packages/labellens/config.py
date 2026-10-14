@@ -2,10 +2,12 @@
 
 from functools import lru_cache
 from typing import Literal
-
+import uuid
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
+from functools import lru_cache
+from pathlib import Path
+from typing import Literal
 
 class Settings(BaseSettings):
     """Central configuration for LabelLens services and pipelines."""
@@ -79,8 +81,40 @@ class Settings(BaseSettings):
     langsmith_api_key: str | None = Field(default=None, alias="LANGSMITH_API_KEY")
     langsmith_project: str = Field(default="labellens", alias="LANGSMITH_PROJECT")
 
+        # Qdrant collections
+    products_collection: str = Field(default="products", alias="PRODUCTS_COLLECTION")
+    knowledge_collection: str = Field(default="knowledge", alias="KNOWLEDGE_COLLECTION")
+
+    # Data paths
+    clean_products_path: Path = Field(
+        default=Path("data/clean/products.parquet"), alias="CLEAN_PRODUCTS_PATH"
+    )
+    images_dir: Path = Field(default=Path("data/images"), alias="IMAGES_DIR")
+    image_keys_path: Path = Field(default=Path("data/raw/data_keys.gz"), alias="IMAGE_KEYS_PATH")
+    embeddings_dir: Path = Field(default=Path("data/embeddings"), alias="EMBEDDINGS_DIR")
+
+    # inside class Settings(BaseSettings):
+    qdrant_url: str = "http://localhost:6333"
+    products_collection: str = "products"
+    knowledge_collection: str = "knowledge"
+
+    text_embed_model: str = "BAAI/bge-small-en-v1.5"
+    sparse_embed_model: str = "Qdrant/bm25"
+    image_embed_model: str = "ViT-B-32"
+    image_embed_pretrained: str = "laion2b_s34b_b79k"
+
+    clean_products_path: Path = Path("data/clean/products.parquet")
+    images_dir: Path = Path("data/images")
+    image_keys_path: Path = Path("data/raw/data_keys.gz")
+    embeddings_dir: Path = Path("data/embeddings")
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Return cached application settings singleton."""
     return Settings()
+
+def point_id(code: str) -> str:
+    """Same barcode -> same ID, every time. This makes re-running jobs safe (idempotent)."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"labellens:product:{code}")) 
+
+settings = get_settings()

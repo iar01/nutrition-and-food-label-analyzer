@@ -262,18 +262,31 @@ Add a trigram (`pg_trgm`) GIN index on name and brand for typo-tolerant lookup, 
 
 **Checkpoint questions.** When would you pick JSONB over a normalized table? Why does a barcode lookup need no vector search? What does the trigram index buy you over `ILIKE`?
 
-## 8. Phase 4 — Embeddings and the vector database (Week 3–5)
+# Phase 4 — Embeddings and the Vector Database (Week 3–5)
 
-**Goal.** Two Qdrant collections: `products` (text, image and sparse vectors per product) and `knowledge` (explanation cards for additives, ingredients and diet rules).
+**Project:** LabelLens, Nutrition & Food Label Analyzer
 
-**Concepts.** What an embedding is, cosine similarity versus dot product, vector normalization, approximate nearest neighbor with HNSW (parameters `m`, `ef_construct`, `ef`), named vectors, payload indexes and pre-filtering, quantization, dense versus sparse retrieval, how CLIP puts text and images in one space, batch inference.
+## Goal
 
-**Steps**
+Two Qdrant collections: `products` (text, image and sparse vectors per product) and `knowledge` (explanation cards for additives, ingredients and diet rules). Text and sparse vectors are indexed first. Image vectors are added in a second pass once the images are downloaded.
 
-1. **Embedder interfaces.** Write `TextEmbedder`, `ImageEmbedder` and `SparseEmbedder` classes with an `embed(batch)` method, so models can be swapped and compared. Cache results on disk by content hash.
-2. **Text embeddings.** Embed each product's `search_text`. For BGE query-time embeddings, test with and without the recommended retrieval instruction prefix and keep what scores better.
-3. **Image embeddings.** Run OpenCLIP over the subset's front images in batches of 32–64 (half precision on GPU). Save vectors to Parquet shards so the job is resumable. Image embedding is the slowest step; start with 20k–50k images, evaluate, then scale up.
-4. **Create collections.** One point per product with named vectors, and payload for filtering:
+## Concepts
+
+What an embedding is, cosine similarity versus dot product, vector normalization, approximate nearest neighbor with HNSW (parameters `m`, `ef_construct`, `ef`), named vectors, payload indexes and pre-filtering, quantization, dense versus sparse retrieval, how CLIP puts text and images in one space, batch inference, resumable and idempotent jobs.
+
+## Steps
+
+### 1. Embedder interfaces
+
+Write `TextEmbedder`, `ImageEmbedder` and `SparseEmbedder` classes with an `embed(batch)` method, so models can be swapped and compared. Normalize vectors and cache results on disk by content hash.
+
+### 2. Text embeddings
+
+Embed each product's `search_text`. For BGE query-time embeddings, test with and without the recommended retrieval instruction prefix and keep what scores better. Also generate the BM25 sparse vectors in this step.
+
+### 3. Create the collections
+
+One point per product with named vectors, and payload for filtering. Create all named vectors now, including `image_clip`. The image vectors can stay empty until step 6.
 
 ```python
 from qdrant_client import QdrantClient, models
@@ -295,6 +308,7 @@ for field in [
     "diet_vegan",
     "diet_vegetarian",
     "diet_gluten_free",
+    "has_image",
 ]:
     client.create_payload_index(
         "products", field_name=field, field_schema=models.PayloadSchemaType.KEYWORD
@@ -303,14 +317,89 @@ for field in [
 
 Check the qdrant-client docs for the exact current API; the idea matters more than the syntax.
 
-5. **Idempotent upserts.** Use a deterministic point ID (UUID5 of the barcode), upsert in batches of 256–1000, and make the job safe to rerun.
-6. **Build the `knowledge` collection.** Sources: names, synonyms and parent relations from the Open Food Facts taxonomies; short notes you write for the 100 most common additives (what it is, why it is used, regulatory status with a source link to public EFSA, WHO or FDA pages); diet rules (what vegan, vegetarian and gluten-free mean and common hidden sources, for example carmine E120, gelatin, whey, and E471 which may be animal or plant). Every card keeps a `source_url`. Chunk to about 200–400 tokens.
-7. **Learning experiments (record results in a table).** bge-small versus bge-base; with and without the product card format; HNSW `ef` versus latency and recall; scalar quantization versus memory and recall.
+### 4. Index text and sparse vectors (pass 1)
 
-**Deliverable.** Both collections populated by `make index`; a notebook with your experiment table and one paragraph on what you learned from each.
+Use a deterministic point ID (UUID5 of the barcode), upsert in batches of 256–1000, and make the job safe to rerun. Set `has_image = "false"` in the payload for now. You can already test text search at this point.
 
-**Checkpoint questions.** Why normalize vectors for cosine search? What does `ef` trade off? Why does CLIP let a text query retrieve images? Why must payload indexes exist before you rely on filters at scale?
+### 5. Download the images
 
+Use the Open Food Facts image dataset on AWS (a public S3 bucket, no account needed), not the product pages, and do not crawl.
+
+1. Download the key index, which lists every object in the bucket:
+
+   ```bash
+   wget https://openfoodfacts-images.s3.eu-west-3.amazonaws.com/data/data_keys.gz -P data/raw/
+   ```
+
+2. Convert each barcode to its folder prefix. Zero-pad to 13 digits, then split (unit-test this on a few products):
+
+   ```python
+   def key_prefix(code: str) -> str:
+       c = code.zfill(13)
+       return f"data/{c[0:3]}/{c[3:6]}/{c[6:9]}/{c[9:]}/"
+   ```
+
+3. In DuckDB, join your subset's prefixes with `data_keys.gz`, keeping only the 400 px versions (`.400.jpg`).
+4. Inspect the real keys for about 5 products before writing the selection rule. Prefer a `front_*.400.jpg` image, otherwise fall back to the lowest numeric image. Log how many products fall into each case and how many have no image.
+5. Download concurrently (8–16 workers) with retries, skip files that already exist, verify each file opens as an image, and write `data/images/manifest.parquet` (code, source key, status, bytes). Start with a pilot of about 5,000 images, then scale up.
+6. Images sync monthly, so a few products may have none. Keep them in the text index and leave `has_image = "false"`.
+
+Reference: `https://openfoodfacts.github.io/documentation/docs/Product-Opener/api/aws-images-dataset/`
+
+Images are licensed CC BY-SA, so keep the Open Food Facts attribution in your README and UI.
+
+### 6. Image embeddings (pass 2)
+
+Run OpenCLIP over the downloaded images in batches of 32–64 (half precision on GPU). Save vectors to Parquet shards so the job is resumable. This is the slowest step, so embed the pilot first, evaluate, then scale up. Attach the vectors to the existing points without re-indexing everything:
+
+```python
+client.update_vectors(
+    collection_name="products",
+    points=[
+        models.PointVectors(id=point_id, vector={"image_clip": vec})
+        for point_id, vec in batch
+    ],
+)
+client.set_payload("products", payload={"has_image": "true"}, points=[p for p, _ in batch])
+```
+
+Again, confirm the exact calls in the current qdrant-client docs.
+
+### 7. Build the `knowledge` collection
+
+Sources:
+
+- Names, synonyms and parent relations from the Open Food Facts taxonomies.
+- Short notes you write for the 100 most common additives: what it is, why it is used, regulatory status, with a source link to public EFSA, WHO or FDA pages.
+- Diet rules: what vegan, vegetarian and gluten-free mean, and common hidden sources (for example carmine E120, gelatin, whey, and E471 which may be animal or plant).
+
+Every card keeps a `source_url`. Chunk to about 200–400 tokens.
+
+### 8. Learning experiments
+
+Record results in a table:
+
+| Experiment | What to compare |
+|---|---|
+| Model size | bge-small versus bge-base |
+| Document format | with and without the product card format |
+| HNSW search | `ef` versus latency and recall |
+| Quantization | scalar quantization versus memory and recall |
+| Image coverage | text-to-image search quality on the pilot versus the full image set |
+
+## Deliverable
+
+- Both collections populated by `make index` (text pass) and `make index-images` (image pass).
+- A download manifest for the images.
+- A notebook with your experiment table and one paragraph on what you learned from each experiment.
+
+## Checkpoint questions
+
+1. Why normalize vectors for cosine search?
+2. What does `ef` trade off?
+3. Why does CLIP let a text query retrieve images?
+4. Why must payload indexes exist before you rely on filters at scale?
+5. Why is a two-pass index (text first, images later) safer than one big job?
 ## 9. Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6)
 
 **Goal.** One `search()` interface that routes the five input types to the right retrieval path, with measured quality.

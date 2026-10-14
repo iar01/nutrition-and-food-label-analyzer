@@ -1,0 +1,1018 @@
+# ---------------- Colours ----------------
+- key: e100
+  type: additive
+  e_number: E100
+  category: colour
+  vegan: "yes"
+  title: "E100 Curcumin"
+  text: "Yellow-orange colour extracted from turmeric root. It is plant-based, so it is suitable for vegan diets. It can fade in light."
+  source_url: ""
+
+- key: e101
+  type: additive
+  e_number: E101
+  category: colour
+  vegan: "yes"
+  title: "E101 Riboflavin (vitamin B2)"
+  text: "Yellow-orange colour that is also vitamin B2. It is usually made by fermentation or chemical synthesis rather than from animals, so it is normally suitable for vegans."
+  source_url: ""
+
+- key: e102
+  type: additive
+  e_number: E102
+  category: colour
+  vegan: "yes"
+  title: "E102 Tartrazine"
+  text: "Synthetic yellow azo dye. In the EU, foods containing it must carry a warning that it may affect activity and attention in children. It is not animal-derived."
+  source_url: ""
+
+- key: e104
+  type: additive
+  e_number: E104
+  category: colour
+  vegan: "yes"
+  title: "E104 Quinoline yellow"
+  text: "Synthetic yellow dye. It is one of six colours that need the EU warning about possible effects on activity and attention in children. It is not animal-derived."
+  source_url: ""
+
+- key: e110
+  type: additive
+  e_number: E110
+  category: colour
+  vegan: "yes"
+  title: "E110 Sunset yellow FCF"
+  text: "Synthetic orange azo dye used in drinks, sweets and snacks. It needs the EU warning about possible effects on activity and attention in children. It is not animal-derived."
+  source_url: ""
+
+- key: e120
+  type: additive
+  e_number: E120
+  category: colour
+  vegan: "no"
+  title: "E120 Carmine (cochineal, carminic acid)"
+  text: "Red colour made from cochineal insects. It is not vegan or vegetarian. It appears on labels as carmine, cochineal or carminic acid, and in rare cases it can cause allergic reactions."
+  source_url: ""
+
+- key: e122
+  type: additive
+  e_number: E122
+  category: colour
+  vegan: "yes"
+  title: "E122 Azorubine (carmoisine)"
+  text: "Synthetic red azo dye. It needs the EU warning about possible effects on activity and attention in children. It is not animal-derived."
+  source_url: ""
+
+- key: e124
+  type: additive
+  e_number: E124
+  category: colour
+  vegan: "yes"
+  title: "E124 Ponceau 4R"
+  text: "Synthetic red azo dye used in sweets, desserts and drinks. It needs the EU warning about possible effects on activity and attention in children. It is not animal-derived."
+  source_url: ""
+
+- key: e129
+  type: additive
+  e_number: E129
+  category: colour
+  vegan: "yes"
+  title: "E129 Allura red AC"
+  text: "Synthetic red azo dye, very common in drinks and sweets. It needs the EU warning about possible effects on activity and attention in children. It is not animal-derived."
+  source_url: ""
+
+- key: e131
+  type: additive
+  e_number: E131
+  category: colour
+  vegan: "yes"
+  title: "E131 Patent blue V"
+  text: "Synthetic blue dye used in some sweets and drinks. It is not animal-derived."
+  source_url: ""
+
+- key: e132
+  type: additive
+  e_number: E132
+  category: colour
+  vegan: "yes"
+  title: "E132 Indigotine (indigo carmine)"
+  text: "Synthetic blue dye used in sweets, drinks and baked goods. Despite the name indigo carmine, it has nothing to do with carmine (E120) and is not animal-derived."
+  source_url: ""
+
+- key: e133
+  type: additive
+  e_number: E133
+  category: colour
+  vegan: "yes"
+  title: "E133 Brilliant blue FCF"
+  text: "Synthetic blue dye used in drinks, sweets and ice cream. It is not animal-derived."
+  source_url: ""
+
+- key: e140
+  type: additive
+  e_number: E140
+  category: colour
+  vegan: "yes"
+  title: "E140 Chlorophylls"
+  text: "Natural green colour extracted from plants such as grass, alfalfa or nettles. It is plant-based."
+  source_url: ""
+
+- key: e141
+  type: additive
+  e_number: E141
+  category: colour
+  vegan: "yes"
+  title: "E141 Copper complexes of chlorophylls"
+  text: "A more stable green colour made by combining chlorophyll with copper. It is plant-based."
+  source_url: ""
+
+- key: e150a
+  type: additive
+  e_number: E150a
+  category: colour
+  vegan: "yes"
+  title: "E150a Plain caramel"
+  text: "Brown colour made by heating sugars. It is plant-based and is not the same thing as caramel sweets, which usually contain milk."
+  source_url: ""
+
+- key: e150d
+  type: additive
+  e_number: E150d
+  category: colour
+  vegan: "yes"
+  title: "E150d Sulphite ammonia caramel"
+  text: "Dark brown colour used in colas, sauces and spirits. It is made by heating sugars with sulphite and ammonium compounds. It is plant-based."
+  source_url: ""
+
+- key: e153
+  type: additive
+  e_number: E153
+  category: colour
+  vegan: "yes"
+  title: "E153 Vegetable carbon"
+  text: "Black colour made from charred plant material. It is plant-based."
+  source_url: ""
+
+- key: e160a
+  type: additive
+  e_number: E160a
+  category: colour
+  vegan: "yes"
+  title: "E160a Carotenes (beta-carotene)"
+  text: "Orange colours made from plants or algae, or produced synthetically. Beta-carotene is also a source of vitamin A in the body. It is not animal-derived."
+  source_url: ""
+
+- key: e160b
+  type: additive
+  e_number: E160b
+  category: colour
+  vegan: "yes"
+  title: "E160b Annatto (bixin, norbixin)"
+  text: "Orange-yellow colour from annatto seeds, used in cheese, butter and snacks. It is plant-based, and rare allergic reactions have been reported."
+  source_url: ""
+
+- key: e160c
+  type: additive
+  e_number: E160c
+  category: colour
+  vegan: "yes"
+  title: "E160c Paprika extract"
+  text: "Red-orange colour extracted from peppers (capsicum). It is plant-based."
+  source_url: ""
+
+- key: e162
+  type: additive
+  e_number: E162
+  category: colour
+  vegan: "yes"
+  title: "E162 Beetroot red (betanin)"
+  text: "Red-pink colour from beetroot. It fades with heat and light and is plant-based."
+  source_url: ""
+
+- key: e163
+  type: additive
+  e_number: E163
+  category: colour
+  vegan: "yes"
+  title: "E163 Anthocyanins"
+  text: "Red, purple or blue colours from fruit and vegetables such as grape skins or black carrot. The colour changes with acidity. It is plant-based."
+  source_url: ""
+
+- key: e170
+  type: additive
+  e_number: E170
+  category: colour
+  vegan: "yes"
+  title: "E170 Calcium carbonate"
+  text: "Chalk or limestone used as a white colour, an acidity regulator, an anti-caking agent and a source of calcium. It is of mineral origin."
+  source_url: ""
+
+- key: e171
+  type: additive
+  e_number: E171
+  category: colour
+  vegan: "yes"
+  title: "E171 Titanium dioxide"
+  text: "White colour used to make foods look brighter. It has not been authorised as a food additive in the EU since 2022, but it may still appear on products from other regions or on old stock. It is mineral, not animal-derived."
+  source_url: ""
+
+- key: e172
+  type: additive
+  e_number: E172
+  category: colour
+  vegan: "yes"
+  title: "E172 Iron oxides and hydroxides"
+  text: "Yellow, red, brown and black mineral pigments, usually made synthetically. They are not animal-derived."
+  source_url: ""
+
+# ---------------- Preservatives ----------------
+- key: e200
+  type: additive
+  e_number: E200
+  category: preservative
+  vegan: "yes"
+  title: "E200 Sorbic acid"
+  text: "Preservative that stops moulds and yeasts. It occurs naturally in some berries but is usually made synthetically. It is not animal-derived."
+  source_url: ""
+
+- key: e202
+  type: additive
+  e_number: E202
+  category: preservative
+  vegan: "yes"
+  title: "E202 Potassium sorbate"
+  text: "Salt of sorbic acid and one of the most common preservatives, used in cheese, wine, drinks, baked goods and sauces. It is not animal-derived."
+  source_url: ""
+
+- key: e210
+  type: additive
+  e_number: E210
+  category: preservative
+  vegan: "yes"
+  title: "E210 Benzoic acid"
+  text: "Preservative that works best in acidic foods such as drinks and pickles. It occurs naturally in some berries. It is not animal-derived."
+  source_url: ""
+
+- key: e211
+  type: additive
+  e_number: E211
+  category: preservative
+  vegan: "yes"
+  title: "E211 Sodium benzoate"
+  text: "Salt of benzoic acid used in soft drinks, sauces and pickles. Under some conditions with vitamin C it can form small amounts of benzene, which manufacturers manage through formulation. It is not animal-derived."
+  source_url: ""
+
+- key: e220
+  type: additive
+  e_number: E220
+  category: preservative
+  vegan: "yes"
+  title: "E220 Sulphur dioxide"
+  text: "Preservative and antioxidant used in dried fruit, wine, juices and some processed foods. Sulphites must be declared as an allergen on EU labels when above 10 mg/kg. They can trigger reactions in sensitive people, especially some people with asthma."
+  source_url: ""
+
+- key: e223
+  type: additive
+  e_number: E223
+  category: preservative
+  vegan: "yes"
+  title: "E223 Sodium metabisulphite"
+  text: "A sulphite preservative and antioxidant used in dried fruit, potato products and drinks. It must be declared on EU labels above 10 mg/kg. It can trigger reactions in sulphite-sensitive people."
+  source_url: ""
+
+- key: e250
+  type: additive
+  e_number: E250
+  category: preservative
+  vegan: "yes"
+  title: "E250 Sodium nitrite"
+  text: "Used in cured meats for colour and flavour and to protect against botulism bacteria. It can form nitrosamines at high cooking temperatures, so regulations limit the amount. The additive itself is not animal-derived, but it appears in meat products."
+  source_url: ""
+
+- key: e251
+  type: additive
+  e_number: E251
+  category: preservative
+  vegan: "yes"
+  title: "E251 Sodium nitrate"
+  text: "Used in cured meats and some cheeses. It is converted to nitrite, so the same limits and cautions as E250 apply. The additive itself is not animal-derived."
+  source_url: ""
+
+- key: e260
+  type: additive
+  e_number: E260
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E260 Acetic acid"
+  text: "The acid in vinegar, used for sourness and as a preservative in pickles, sauces and dressings. It is not animal-derived."
+  source_url: ""
+
+- key: e270
+  type: additive
+  e_number: E270
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E270 Lactic acid"
+  text: "An acid used as an acidity regulator and preservative. Despite the name it is usually made by fermenting plant sugars and is not a dairy ingredient."
+  source_url: ""
+
+- key: e282
+  type: additive
+  e_number: E282
+  category: preservative
+  vegan: "yes"
+  title: "E282 Calcium propionate"
+  text: "Preservative that stops mould in bread and baked goods. It is not animal-derived."
+  source_url: ""
+
+- key: e290
+  type: additive
+  e_number: E290
+  category: gas
+  vegan: "yes"
+  title: "E290 Carbon dioxide"
+  text: "The gas that makes drinks fizzy. It is also used in packaging to protect food. It is not animal-derived."
+  source_url: ""
+
+- key: e296
+  type: additive
+  e_number: E296
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E296 Malic acid"
+  text: "Acid that gives a sour, fruity taste to sweets and drinks. It occurs naturally in apples. It is not animal-derived."
+  source_url: ""
+
+# ---------------- Antioxidants ----------------
+- key: e300
+  type: additive
+  e_number: E300
+  category: antioxidant
+  vegan: "yes"
+  title: "E300 Ascorbic acid (vitamin C)"
+  text: "Vitamin C used as an antioxidant and as a flour improver. It is usually produced from plant sugars and is not animal-derived."
+  source_url: ""
+
+- key: e304
+  type: additive
+  e_number: E304
+  category: antioxidant
+  vegan: "varies"
+  title: "E304 Ascorbyl palmitate"
+  text: "A fat-soluble form of vitamin C that protects oils and fats. It is made with palmitic acid, which can come from palm oil or from animal fat. The origin is rarely stated, so vegan status is unknown."
+  source_url: ""
+
+- key: e306
+  type: additive
+  e_number: E306
+  category: antioxidant
+  vegan: "yes"
+  title: "E306 Tocopherol-rich extract"
+  text: "Natural vitamin E extracted from vegetable oils, used to protect fats and oils from going rancid. It is plant-based."
+  source_url: ""
+
+- key: e307
+  type: additive
+  e_number: E307
+  category: antioxidant
+  vegan: "yes"
+  title: "E307 Alpha-tocopherol"
+  text: "Synthetic vitamin E used as an antioxidant in oils and fats. It is not animal-derived."
+  source_url: ""
+
+- key: e320
+  type: additive
+  e_number: E320
+  category: antioxidant
+  vegan: "yes"
+  title: "E320 Butylated hydroxyanisole (BHA)"
+  text: "Synthetic antioxidant that stops fats and oils going rancid, used in some snacks, chewing gum and fats. It is not animal-derived."
+  source_url: ""
+
+- key: e321
+  type: additive
+  e_number: E321
+  category: antioxidant
+  vegan: "yes"
+  title: "E321 Butylated hydroxytoluene (BHT)"
+  text: "Synthetic antioxidant used in chewing gum, cereals and fats. It is not animal-derived."
+  source_url: ""
+
+# ---------------- Emulsifiers, acids, salts ----------------
+- key: e322
+  type: additive
+  e_number: E322
+  category: emulsifier
+  vegan: "varies"
+  title: "E322 Lecithins"
+  text: "Emulsifier that helps oil and water mix. Commercial lecithin usually comes from soy or sunflower but can also come from egg yolk, so the source matters for allergies and vegan diets. If it comes from soy or egg, the allergen must be shown on the label."
+  source_url: ""
+
+- key: e325
+  type: additive
+  e_number: E325
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E325 Sodium lactate"
+  text: "Salt of lactic acid used to keep meat and baked goods moist and to extend shelf life. It is usually made by fermenting plant sugars."
+  source_url: ""
+
+- key: e330
+  type: additive
+  e_number: E330
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E330 Citric acid"
+  text: "Sour-tasting acid used in drinks, sweets, jams and many processed foods. It is made industrially by fermentation of sugars and is not animal-derived."
+  source_url: ""
+
+- key: e331
+  type: additive
+  e_number: E331
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E331 Sodium citrates"
+  text: "Salts of citric acid used as acidity regulators and as emulsifying salts in processed cheese. They are not animal-derived."
+  source_url: ""
+
+- key: e334
+  type: additive
+  e_number: E334
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E334 Tartaric acid"
+  text: "Acid obtained from by-products of winemaking, used for sourness and in baking powder. It is not animal-derived."
+  source_url: ""
+
+- key: e339
+  type: additive
+  e_number: E339
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E339 Sodium phosphates"
+  text: "Mineral salts used as acidity regulators, emulsifying salts and raising agents. People with kidney disease are often advised to limit added phosphates. They are not animal-derived."
+  source_url: ""
+
+- key: e340
+  type: additive
+  e_number: E340
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E340 Potassium phosphates"
+  text: "Mineral salts used as acidity regulators and emulsifying salts. People with kidney disease are often advised to limit added phosphates. They are not animal-derived."
+  source_url: ""
+
+- key: e341
+  type: additive
+  e_number: E341
+  category: anti-caking
+  vegan: "yes"
+  title: "E341 Calcium phosphates"
+  text: "Mineral salts used as anti-caking agents, raising agents and calcium sources. They are not animal-derived."
+  source_url: ""
+
+# ---------------- Thickeners and gelling agents ----------------
+- key: e401
+  type: additive
+  e_number: E401
+  category: thickener
+  vegan: "yes"
+  title: "E401 Sodium alginate"
+  text: "Thickener and gelling agent extracted from brown seaweed. It is plant-based."
+  source_url: ""
+
+- key: e406
+  type: additive
+  e_number: E406
+  category: thickener
+  vegan: "yes"
+  title: "E406 Agar"
+  text: "Gelling agent from red seaweed, often used as a vegan substitute for gelatin. It is plant-based."
+  source_url: ""
+
+- key: e407
+  type: additive
+  e_number: E407
+  category: thickener
+  vegan: "yes"
+  title: "E407 Carrageenan"
+  text: "Gelling and thickening agent from red seaweed, used in dairy alternatives, desserts and deli meats. It is plant-based. Some consumers choose to avoid it, and its use is regulated."
+  source_url: ""
+
+- key: e410
+  type: additive
+  e_number: E410
+  category: thickener
+  vegan: "yes"
+  title: "E410 Locust bean gum"
+  text: "Thickener from carob tree seeds, used in ice cream, sauces and dairy products. It is plant-based."
+  source_url: ""
+
+- key: e412
+  type: additive
+  e_number: E412
+  category: thickener
+  vegan: "yes"
+  title: "E412 Guar gum"
+  text: "Thickener from guar beans, used in ice cream, sauces and gluten-free baking. It is plant-based and high in soluble fibre."
+  source_url: ""
+
+- key: e414
+  type: additive
+  e_number: E414
+  category: thickener
+  vegan: "yes"
+  title: "E414 Gum arabic (acacia gum)"
+  text: "Natural gum from acacia tree sap, used in soft drinks, sweets and as a glazing agent. It is plant-based."
+  source_url: ""
+
+- key: e415
+  type: additive
+  e_number: E415
+  category: thickener
+  vegan: "yes"
+  title: "E415 Xanthan gum"
+  text: "Thickener made by bacterial fermentation of sugars, used in sauces, dressings and gluten-free baking. It is not animal-derived."
+  source_url: ""
+
+- key: e417
+  type: additive
+  e_number: E417
+  category: thickener
+  vegan: "yes"
+  title: "E417 Tara gum"
+  text: "Thickener made from the seeds of the tara tree, used in dairy products, sauces and desserts. It is plant-based."
+  source_url: ""
+
+- key: e418
+  type: additive
+  e_number: E418
+  category: thickener
+  vegan: "yes"
+  title: "E418 Gellan gum"
+  text: "Gelling agent made by bacterial fermentation, used in plant-based drinks, jellies and desserts. It is not animal-derived."
+  source_url: ""
+
+- key: e420
+  type: additive
+  e_number: E420
+  category: sweetener
+  vegan: "yes"
+  title: "E420 Sorbitol"
+  text: "Sugar alcohol used as a sweetener (about 60 percent as sweet as sugar) and to keep foods moist. Large amounts can have a laxative effect, and EU labels require a warning in products with high polyol content. It is not animal-derived."
+  source_url: ""
+
+- key: e421
+  type: additive
+  e_number: E421
+  category: sweetener
+  vegan: "yes"
+  title: "E421 Mannitol"
+  text: "Sugar alcohol used as a sweetener and anti-caking agent, especially in chewing gum. Large amounts can have a laxative effect. It is not animal-derived."
+  source_url: ""
+
+- key: e422
+  type: additive
+  e_number: E422
+  category: humectant
+  vegan: "varies"
+  title: "E422 Glycerol (glycerine)"
+  text: "Sweet-tasting liquid used to keep foods moist and as a solvent. It can be made from plant oils, from animal fats or synthetically, and the source is rarely stated, so vegan status is unknown."
+  source_url: ""
+
+- key: e425
+  type: additive
+  e_number: E425
+  category: thickener
+  vegan: "yes"
+  title: "E425 Konjac"
+  text: "Gelling thickener from the konjac root, used in jellies and noodles. In the EU it is not permitted in jelly mini-cups because of choking risk. It is plant-based."
+  source_url: ""
+
+- key: e433
+  type: additive
+  e_number: E433
+  category: emulsifier
+  vegan: "varies"
+  title: "E433 Polysorbate 80"
+  text: "Synthetic emulsifier used in ice cream, sauces and some baked goods. It is made from sorbitol and fatty acids, and the fatty acid source (plant or animal) is not always stated."
+  source_url: ""
+
+- key: e440
+  type: additive
+  e_number: E440
+  category: thickener
+  vegan: "yes"
+  title: "E440 Pectins"
+  text: "Gelling agent from citrus peel and apple pomace, used to set jams and jellies. It is plant-based."
+  source_url: ""
+
+- key: e450
+  type: additive
+  e_number: E450
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E450 Diphosphates"
+  text: "Mineral salts used as raising agents, emulsifying salts and stabilisers in baked goods, processed cheese and meat. People with kidney disease are often advised to limit added phosphates. They are not animal-derived."
+  source_url: ""
+
+- key: e451
+  type: additive
+  e_number: E451
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E451 Triphosphates"
+  text: "Mineral salts used to retain water and improve texture in processed meat and fish. People with kidney disease are often advised to limit added phosphates. They are not animal-derived."
+  source_url: ""
+
+- key: e452
+  type: additive
+  e_number: E452
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E452 Polyphosphates"
+  text: "Mineral salts used to retain water and stabilise processed meat, fish and cheese. People with kidney disease are often advised to limit added phosphates. They are not animal-derived."
+  source_url: ""
+
+- key: e460
+  type: additive
+  e_number: E460
+  category: thickener
+  vegan: "yes"
+  title: "E460 Cellulose"
+  text: "Plant fibre (from wood pulp or cotton) used as an anti-caking agent, bulking agent and texture improver, for example in grated cheese. It is plant-based."
+  source_url: ""
+
+- key: e461
+  type: additive
+  e_number: E461
+  category: thickener
+  vegan: "yes"
+  title: "E461 Methylcellulose"
+  text: "Chemically modified cellulose that thickens and binds, widely used in plant-based burgers and sausages. It is plant-based."
+  source_url: ""
+
+- key: e466
+  type: additive
+  e_number: E466
+  category: thickener
+  vegan: "yes"
+  title: "E466 Carboxymethylcellulose"
+  text: "Modified cellulose used to thicken and stabilise ice cream, sauces and gluten-free products. It is plant-based."
+  source_url: ""
+
+# ---------------- Fatty acid emulsifiers ----------------
+- key: e471
+  type: additive
+  e_number: E471
+  category: emulsifier
+  vegan: "varies"
+  title: "E471 Mono- and diglycerides of fatty acids"
+  text: "One of the most common emulsifiers, used in bread, margarine, ice cream and cakes. It is made from vegetable or animal fats and the label rarely says which, so vegan status is unknown unless the product is labelled vegan."
+  source_url: ""
+
+- key: e472e
+  type: additive
+  e_number: E472e
+  category: emulsifier
+  vegan: "varies"
+  title: "E472e DATEM (diacetyl tartaric acid esters of mono- and diglycerides)"
+  text: "Emulsifier used as a dough conditioner in bread. The fats it is made from can be plant or animal, and the source is rarely stated, so vegan status is unknown."
+  source_url: ""
+
+- key: e473
+  type: additive
+  e_number: E473
+  category: emulsifier
+  vegan: "varies"
+  title: "E473 Sucrose esters of fatty acids"
+  text: "Emulsifier made from sugar and fatty acids, used in baked goods and drinks. The fatty acids can be plant or animal, so vegan status is unknown."
+  source_url: ""
+
+- key: e475
+  type: additive
+  e_number: E475
+  category: emulsifier
+  vegan: "varies"
+  title: "E475 Polyglycerol esters of fatty acids"
+  text: "Emulsifier used in cakes, margarine and sauces. The fatty acids and glycerol can be plant or animal in origin, so vegan status is unknown."
+  source_url: ""
+
+- key: e476
+  type: additive
+  e_number: E476
+  category: emulsifier
+  vegan: "varies"
+  title: "E476 Polyglycerol polyricinoleate (PGPR)"
+  text: "Emulsifier used in chocolate to make it flow more easily. It is made from castor oil fatty acids and polyglycerol. It is usually plant-based, but the glycerol source is not always stated, so vegan status is treated as unknown."
+  source_url: ""
+
+- key: e481
+  type: additive
+  e_number: E481
+  category: emulsifier
+  vegan: "varies"
+  title: "E481 Sodium stearoyl-2-lactylate"
+  text: "Dough conditioner and emulsifier used in bread and baked goods. Its stearic acid can come from plant or animal fats, so vegan status is unknown."
+  source_url: ""
+
+- key: e491
+  type: additive
+  e_number: E491
+  category: emulsifier
+  vegan: "varies"
+  title: "E491 Sorbitan monostearate"
+  text: "Emulsifier used in cakes, yeast and coatings. The stearic acid it contains can come from plant or animal fats, so vegan status is unknown."
+  source_url: ""
+
+# ---------------- Carbonates, minerals, processing aids ----------------
+- key: e500
+  type: additive
+  e_number: E500
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E500 Sodium carbonates (baking soda)"
+  text: "Raising agent and acidity regulator, including baking soda. It is mineral in origin."
+  source_url: ""
+
+- key: e501
+  type: additive
+  e_number: E501
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E501 Potassium carbonates"
+  text: "Acidity regulator used in cocoa processing and some baked goods. It is mineral in origin."
+  source_url: ""
+
+- key: e503
+  type: additive
+  e_number: E503
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E503 Ammonium carbonates"
+  text: "Traditional raising agent used in crisp biscuits and crackers. It breaks down fully on baking. It is not animal-derived."
+  source_url: ""
+
+- key: e504
+  type: additive
+  e_number: E504
+  category: anti-caking
+  vegan: "yes"
+  title: "E504 Magnesium carbonates"
+  text: "Anti-caking agent and acidity regulator used in salt and powders. It is mineral in origin."
+  source_url: ""
+
+- key: e524
+  type: additive
+  e_number: E524
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E524 Sodium hydroxide"
+  text: "Strong alkali used as a processing aid, for example in making pretzels, curing olives and processing cocoa. Only traces remain in the finished food. It is mineral in origin."
+  source_url: ""
+
+- key: e551
+  type: additive
+  e_number: E551
+  category: anti-caking
+  vegan: "yes"
+  title: "E551 Silicon dioxide (silica)"
+  text: "Anti-caking agent used in powders, spices, salt and instant drinks. It is mineral in origin."
+  source_url: ""
+
+- key: e553b
+  type: additive
+  e_number: E553b
+  category: anti-caking
+  vegan: "yes"
+  title: "E553b Talc"
+  text: "Mineral used as an anti-caking and glazing agent in a small number of foods, for example some coated products. It is mineral in origin."
+  source_url: ""
+
+- key: e570
+  type: additive
+  e_number: E570
+  category: emulsifier
+  vegan: "varies"
+  title: "E570 Fatty acids"
+  text: "Fatty acids such as stearic acid, used as anti-foaming and glazing agents and as a base for other additives. They can come from plant oils or animal fats, so vegan status is unknown."
+  source_url: ""
+
+- key: e575
+  type: additive
+  e_number: E575
+  category: acidity-regulator
+  vegan: "yes"
+  title: "E575 Glucono delta-lactone (GDL)"
+  text: "Acidifier and raising agent made by fermenting glucose, used in tofu, cured meats and baked goods. It is not animal-derived."
+  source_url: ""
+
+# ---------------- Flavour enhancers ----------------
+- key: e621
+  type: additive
+  e_number: E621
+  category: flavour-enhancer
+  vegan: "yes"
+  title: "E621 Monosodium glutamate (MSG)"
+  text: "Flavour enhancer that adds a savoury umami taste. It is made by fermenting starch or sugars and is not animal-derived. Some people report sensitivity to it, though controlled studies have been inconsistent."
+  source_url: ""
+
+- key: e627
+  type: additive
+  e_number: E627
+  category: flavour-enhancer
+  vegan: "varies"
+  title: "E627 Disodium guanylate"
+  text: "Flavour enhancer often used together with MSG in snacks, noodles and soups. It can be produced from yeast or from fish or meat, so vegan status is unknown unless the product states otherwise."
+  source_url: ""
+
+- key: e631
+  type: additive
+  e_number: E631
+  category: flavour-enhancer
+  vegan: "varies"
+  title: "E631 Disodium inosinate"
+  text: "Flavour enhancer often used with MSG. It can be produced from meat, fish or by fermentation, so vegan status is unknown unless the product states otherwise."
+  source_url: ""
+
+# ---------------- Glazing agents and waxes ----------------
+- key: e901
+  type: additive
+  e_number: E901
+  category: glazing-agent
+  vegan: "no"
+  title: "E901 Beeswax"
+  text: "Glazing agent produced by honeybees, used to coat sweets, fruit and cheese. It is not vegan."
+  source_url: ""
+
+- key: e903
+  type: additive
+  e_number: E903
+  category: glazing-agent
+  vegan: "yes"
+  title: "E903 Carnauba wax"
+  text: "Glazing agent from the leaves of the carnauba palm, used on sweets, fruit and coated snacks. It is plant-based."
+  source_url: ""
+
+- key: e904
+  type: additive
+  e_number: E904
+  category: glazing-agent
+  vegan: "no"
+  title: "E904 Shellac"
+  text: "Glazing agent made from a resin secreted by the lac insect, used on sweets, fruit and tablets. It is not vegan or vegetarian."
+  source_url: ""
+
+- key: e920
+  type: additive
+  e_number: E920
+  category: flour-treatment
+  vegan: "varies"
+  title: "E920 L-cysteine"
+  text: "Dough improver used in bread and baked goods. It can be made from animal sources such as feathers or hair, or by fermentation, and the source is rarely stated, so vegan status is unknown."
+  source_url: ""
+
+# ---------------- Sweeteners ----------------
+- key: e950
+  type: additive
+  e_number: E950
+  category: sweetener
+  vegan: "yes"
+  title: "E950 Acesulfame K"
+  text: "Synthetic intense sweetener about 200 times sweeter than sugar, with no calories. It is heat stable and often blended with other sweeteners. It is not animal-derived."
+  source_url: ""
+
+- key: e951
+  type: additive
+  e_number: E951
+  category: sweetener
+  vegan: "yes"
+  title: "E951 Aspartame"
+  text: "Synthetic intense sweetener about 200 times sweeter than sugar. Labels must state that it contains a source of phenylalanine, which matters for people with phenylketonuria (PKU). It is not animal-derived."
+  source_url: ""
+
+- key: e955
+  type: additive
+  e_number: E955
+  category: sweetener
+  vegan: "yes"
+  title: "E955 Sucralose"
+  text: "Intense sweetener made from sugar, about 600 times sweeter than sugar and stable when heated. It is not animal-derived."
+  source_url: ""
+
+- key: e960
+  type: additive
+  e_number: E960
+  category: sweetener
+  vegan: "yes"
+  title: "E960 Steviol glycosides"
+  text: "Intense sweeteners extracted from stevia leaves, roughly 200 to 300 times sweeter than sugar. They are plant-based."
+  source_url: ""
+
+- key: e965
+  type: additive
+  e_number: E965
+  category: sweetener
+  vegan: "yes"
+  title: "E965 Maltitol"
+  text: "Sugar alcohol used in sugar-free chocolate and sweets, with a sweetness close to sugar. Large amounts can have a laxative effect. It is made from starch and is not animal-derived."
+  source_url: ""
+
+- key: e966
+  type: additive
+  e_number: E966
+  category: sweetener
+  vegan: "no"
+  title: "E966 Lactitol"
+  text: "Sugar alcohol made from lactose, which is milk sugar, so it is derived from milk and is not vegan. Large amounts can have a laxative effect."
+  source_url: ""
+
+- key: e967
+  type: additive
+  e_number: E967
+  category: sweetener
+  vegan: "yes"
+  title: "E967 Xylitol"
+  text: "Sugar alcohol used in sugar-free gum and sweets that is kind to teeth. Large amounts can have a laxative effect. It is very toxic to dogs, so keep products containing it away from pets. It is not animal-derived."
+  source_url: ""
+
+- key: e968
+  type: additive
+  e_number: E968
+  category: sweetener
+  vegan: "yes"
+  title: "E968 Erythritol"
+  text: "Sugar alcohol with almost no calories, about 70 percent as sweet as sugar, usually produced by fermentation. It is generally better tolerated in the gut than other sugar alcohols. It is not animal-derived."
+  source_url: ""
+
+- key: e1200
+  type: additive
+  e_number: E1200
+  category: bulking-agent
+  vegan: "yes"
+  title: "E1200 Polydextrose"
+  text: "Bulking agent and fibre made from glucose and sorbitol, used in reduced-sugar products. Large amounts can have a laxative effect. It is not animal-derived."
+  source_url: ""
+
+# ---------------- Modified starches and others ----------------
+- key: e1404
+  type: additive
+  e_number: E1404
+  category: thickener
+  vegan: "yes"
+  title: "E1404 Oxidised starch"
+  text: "Modified starch used as a thickener and binder. The starch can come from maize, potato, tapioca or wheat, so check the label for wheat or gluten if that matters. It is not animal-derived."
+  source_url: ""
+
+- key: e1412
+  type: additive
+  e_number: E1412
+  category: thickener
+  vegan: "yes"
+  title: "E1412 Distarch phosphate"
+  text: "Modified starch used to thicken and stabilise sauces, soups and desserts. The starch source can include wheat, so check the label for gluten. It is not animal-derived."
+  source_url: ""
+
+- key: e1414
+  type: additive
+  e_number: E1414
+  category: thickener
+  vegan: "yes"
+  title: "E1414 Acetylated distarch phosphate"
+  text: "Modified starch used to thicken and stabilise sauces, fillings and frozen foods. The starch source can include wheat, so check the label for gluten. It is not animal-derived."
+  source_url: ""
+
+- key: e1422
+  type: additive
+  e_number: E1422
+  category: thickener
+  vegan: "yes"
+  title: "E1422 Acetylated distarch adipate"
+  text: "Modified starch used in sauces, dressings and baby foods to keep texture stable. The starch source can include wheat, so check the label for gluten. It is not animal-derived."
+  source_url: ""
+
+- key: e1442
+  type: additive
+  e_number: E1442
+  category: thickener
+  vegan: "yes"
+  title: "E1442 Hydroxypropyl distarch phosphate"
+  text: "Modified starch used in sauces, yoghurts and fruit fillings for stable thickness. The starch source can include wheat, so check the label for gluten. It is not animal-derived."
+  source_url: ""
+
+- key: e1450
+  type: additive
+  e_number: E1450
+  category: emulsifier
+  vegan: "yes"
+  title: "E1450 Starch sodium octenyl succinate"
+  text: "Modified starch that acts as an emulsifier, used in beverage emulsions and powdered products. The starch source can include wheat, so check the label for gluten. It is not animal-derived."
+  source_url: ""
+
+- key: e1520
+  type: additive
+  e_number: E1520
+  category: solvent
+  vegan: "yes"
+  title: "E1520 Propylene glycol"
+  text: "Synthetic liquid used as a solvent and carrier for flavours and colours. It is not animal-derived."
+  source_url: ""
