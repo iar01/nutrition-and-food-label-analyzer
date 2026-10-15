@@ -4,7 +4,7 @@ from PIL import Image
 
 class EasyOcr:
     def __init__(self) -> None:
-        import easyocr
+        import easyocr  # type: ignore[import-untyped]
         import torch
 
         self.reader = easyocr.Reader(["en"], gpu=torch.cuda.is_available())
