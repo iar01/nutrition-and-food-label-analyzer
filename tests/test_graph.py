@@ -46,9 +46,7 @@ class FakeSearcher:
     def __init__(self, n: int = 1) -> None:
         self.n = n
 
-    def products(
-        self, query: str, limit: int = 5, query_filter: Any = None
-    ) -> list[dict[str, Any]]:
+    def products(self, query: str, limit: int = 5, filters: Any = None) -> list[dict[str, Any]]:
         hit = {
             "code": "12345678",
             "name": "Test Spread",

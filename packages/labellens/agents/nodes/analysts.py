@@ -52,7 +52,7 @@ def ingredient_analyst(state: AgentState, deps: Deps) -> dict[str, Any]:
         }
 
     markers = ingredient_markers(text)
-    query = f"{' '.join(profile.get('diets', []))} {text[:200]}".strip()
+    query = f"{' '.join(profile.get('diets', []))} {text[:200]}".strip()[:200]
     hits = deps.searcher.knowledge(query, k=3, exclude_types=["additive"])
     evidence = [kb_hit_evidence(h) for h in hits]
     allowed = {e["id"] for e in evidence}

@@ -100,6 +100,9 @@ class Settings(BaseSettings):
         default=Path("data/checkpoints.sqlite"), alias="CHECKPOINT_DB_PATH"
     )
 
+    mcp_url: str = Field(default="http://127.0.0.1:8765/mcp", alias="MCP_URL")
+    mcp_auth_token: str | None = Field(default=None, alias="MCP_AUTH_TOKEN")
+
     # Compatibility aliases
     @property
     def text_embed_model(self) -> str:

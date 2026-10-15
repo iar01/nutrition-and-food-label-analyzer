@@ -6,6 +6,7 @@ from qdrant_client import QdrantClient, models
 from labellens.config import settings
 from labellens.embeddings.sparse import Bm25SparseEmbedder
 from labellens.embeddings.text import BgeTextEmbedder
+from labellens.retrieval.filters import build_filter
 from labellens.retrieval.qdrant_setup import get_client
 
 
@@ -21,8 +22,9 @@ class Searcher:
         self.sparse_emb = sparse_emb or Bm25SparseEmbedder()
 
     def products(
-        self, query: str, limit: int = 5, query_filter: models.Filter | None = None
+        self, query: str, limit: int = 5, filters: dict[str, Any] | None = None
     ) -> list[dict[str, Any]]:
+        query_filter = build_filter(filters)
         res = self.client.query_points(
             collection_name=settings.products_collection,
             prefetch=[
@@ -74,3 +76,25 @@ class Searcher:
             with_payload=True,
         )
         return [dict(p.payload or {}) for p in res.points]
+
+    def by_image(self, vector: Sequence[float], limit: int = 5) -> list[dict[str, Any]]:
+        res = self.client.query_points(
+            collection_name=settings.products_collection,
+            query=list(vector),
+            using="image_clip",
+            query_filter=models.Filter(
+                must=[models.FieldCondition(key="has_image", match=models.MatchValue(value=True))]
+            ),
+            limit=limit,
+            with_payload=True,
+        )
+        return [
+            {
+                "code": (p.payload or {}).get("code"),
+                "name": (p.payload or {}).get("name"),
+                "brands": (p.payload or {}).get("brands"),
+                "nutriscore": (p.payload or {}).get("nutriscore"),
+                "score": p.score,
+            }
+            for p in res.points
+        ]

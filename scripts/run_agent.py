@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from labellens.agents.deps import build_default_deps
 from labellens.agents.graph import build_graph
 from labellens.config import settings
+from labellens.mcp_client.toolbox import build_mcp_deps
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.types import Command
@@ -57,11 +58,19 @@ def main() -> None:
     ap.add_argument(
         "--thread", default=None, help="thread id (reuse it to continue a conversation)"
     )
+    ap.add_argument(
+        "--mcp", action="store_true", help="fetch data through the MCP server (settings.mcp_url)"
+    )
     args = ap.parse_args()
 
     settings.checkpoint_db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(settings.checkpoint_db_path), check_same_thread=False)
-    graph = build_graph(build_default_deps(), SqliteSaver(conn))
+    deps = (
+        build_mcp_deps(settings.mcp_url, settings.mcp_auth_token)
+        if args.mcp
+        else build_default_deps()
+    )
+    graph = build_graph(deps, SqliteSaver(conn))
 
     thread_id = args.thread or str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}

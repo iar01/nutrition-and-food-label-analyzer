@@ -50,8 +50,8 @@ flowchart TD
     P3 --> P4["Phase 4: Embeddings & Vector DB Qdrant - [x] Complete"]
     P4 --> P5["Phase 5: Hybrid & Multimodal Retrieval - [x] Complete"]
     P5 --> P6["Phase 6: LangGraph Agents - [x] Complete"]
-    P6 --> P7["Phase 7: FastMCP Server - [ ] Next Up"]
-    P7 --> P8["Phase 8: FastAPI Gateway - [ ] Planned"]
+    P6 --> P7["Phase 7: FastMCP Server - [x] Complete"]
+    P7 --> P8["Phase 8: FastAPI Gateway - [ ] Next Up"]
     P8 --> P9["Phase 9: Next.js Frontend - [ ] Planned"]
     P9 --> P10["Phase 10: Formal Evals - [ ] Planned"]
     P10 --> P11["Phase 11: Production Hardening - [ ] Planned"]
@@ -60,9 +60,9 @@ flowchart TD
     classDef next fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff;
     classDef planned fill:#4b5563,stroke:#374151,stroke-width:1px,color:#fff;
 
-    class P0,P1,P2,P3,P4,P5,P6 done;
-    class P7 next;
-    class P8,P9,P10,P11 planned;
+    class P0,P1,P2,P3,P4,P5,P6,P7 done;
+    class P8 next;
+    class P9,P10,P11 planned;
 ```
 
 ### Phase Milestone Checklist
@@ -73,7 +73,7 @@ flowchart TD
 - [x] **Phase 4 — Embeddings and the Vector Database (Week 3–5)**: Qdrant dual-collection setup, BGE dense, BM25 sparse, OpenCLIP image vectors, HNSW & INT8 scalar quantization benchmarks.
 - [x] **Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6)**: Reciprocal Rank Fusion (RRF), cross-encoder reranker, multimodal router.
 - [x] **Phase 6 — Agents with LangGraph (Week 6–8)**: Multi-agent supervisor, additive analyst, nutrition/diet analyst, critic, human-in-the-loop.
-- [ ] **Phase 7 — The MCP server (Week 8)**: FastMCP server exposing tools, resources, and prompt templates.
+- [x] **Phase 7 — The MCP server (Week 8)**: FastMCP server exposing tools, resources, and prompt templates behind stdio and Streamable HTTP.
 - [ ] **Phase 8 — API gateway with FastAPI (Week 8–9)**: Async API, SSE streaming chat, CORS, Pydantic v2 schemas.
 - [ ] **Phase 9 — Frontend with Next.js (Week 9–10)**: Mobile-responsive UI, camera barcode scanning, live streaming chat.
 - [ ] **Phase 10 — Evaluation (continuous, formalized in Week 10)**: Golden evaluation datasets, allergen detection accuracy, retrieval recall/MRR.
@@ -571,7 +571,7 @@ class AgentState(TypedDict):
 
 **Checkpoint questions.** What is a reducer and why does `evidence` need one? Why compute verdicts outside the LLM? What would break if the critic were removed, and how would your evals show it?
 
-## 11. Phase 7 — The MCP server (Week 8) [ ] Next Up
+## 11. Phase 7 — The MCP server (Week 8) [x] Complete
 
 **Goal.** Your retrieval and data tools exposed through a Model Context Protocol server, consumed by your own agent and by any external MCP client.
 
@@ -623,7 +623,7 @@ if __name__ == "__main__":
 
 **Checkpoint questions.** When is something a resource rather than a tool? Why does stdio not need authentication but HTTP does? What can go wrong if a tool description is vague?
 
-## 12. Phase 8 — API gateway with FastAPI (Week 8–9) [ ] Planned
+## 12. Phase 8 — API gateway with FastAPI (Week 8–9) [ ] Next Up
 
 **Goal.** A typed, streaming HTTP API in front of the agent graph.
 

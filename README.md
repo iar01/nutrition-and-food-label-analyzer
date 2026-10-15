@@ -59,8 +59,8 @@ flowchart LR
     P3 --> P4["Phase 4: Vectors ✅"]
     P4 --> P5["Phase 5: Retrieval ✅"]
     P5 --> P6["Phase 6: Agents ✅"]
-    P6 --> P7["Phase 7: MCP 🔄"]
-    P7 --> P8["Phase 8: API ⏹"]
+    P6 --> P7["Phase 7: MCP ✅"]
+    P7 --> P8["Phase 8: API 🔄"]
     P8 --> P9["Phase 9: Web ⏹"]
     P9 --> P10["Phase 10: Evals ⏹"]
     P10 --> P11["Phase 11: Deploy ⏹"]
@@ -69,9 +69,9 @@ flowchart LR
     classDef current fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
     classDef pending fill:#6b7280,stroke:#4b5563,stroke-width:1px,color:#fff;
 
-    class P0,P1,P2,P3,P4,P5,P6 done;
-    class P7 current;
-    class P8,P9,P10,P11 pending;
+    class P0,P1,P2,P3,P4,P5,P6,P7 done;
+    class P8 current;
+    class P9,P10,P11 pending;
 ```
 
 ### Phase Progress Checklist
@@ -82,11 +82,23 @@ flowchart LR
 - [x] **Phase 4: Embeddings & Vector Database** — Qdrant dual-collection setup (`products` & `knowledge`), BGE dense text embeddings, FastEmbed BM25 sparse vectors, OpenCLIP image vectors, HNSW tuning, INT8 scalar quantization benchmarks.
 - [x] **Phase 5: Hybrid & Multimodal Retrieval** — Reciprocal Rank Fusion (RRF), cross-encoder reranking (`BAAI/bge-reranker-base`), multimodal query router, golden set ablation benchmarks.
 - [x] **Phase 6: Agents with LangGraph** — Stateful multi-agent graph (router, candidates finder, interactive interrupt picker, parallel ingredient/additive/diet analysts, bounded revision critic, and template fallbacks).
-- [ ] **Phase 7: FastMCP Server** — Standard Model Context Protocol server exposing tools, resources, and prompt templates.
+- [x] **Phase 7: FastMCP Server** — Model Context Protocol server exposing 10 tools, 2 resources, and 2 prompts across stdio & Streamable HTTP transports with bearer-token auth, sliding-window rate limiting, and Claude Desktop integration.
 - [ ] **Phase 8: API Gateway with FastAPI** — Async API, Server-Sent Events (SSE) streaming chat responses, Pydantic v2 schemas.
 - [ ] **Phase 9: Frontend with Next.js** — Mobile-first web application with in-browser camera barcode scanning and streaming chat.
 - [ ] **Phase 10: Formal Evaluation** — Golden evaluation datasets for allergen detection, retrieval Recall/MRR, and multi-agent tracing.
 - [ ] **Phase 11: Production Hardening & Cloud Deployment** — Multi-stage Docker packaging, GitHub Container Registry, cloud deployment on free tiers.
+
+### Phase 7 FastMCP Server Capabilities & Evaluation
+
+| Component | Scope | Coverage & Details | Status |
+|---|---|---|:---:|
+| **Deterministic Tools (8 core)** | `lookup_by_barcode`, `search_products`, `search_knowledge`, `get_nutrition`, `explain_additive`, `check_diet_fit`, `find_alternatives`, `compare_products` | Full parameter validation (EAN/UPC regex, literal enums, max length guards), read-only DuckDB / Qdrant access | **Verified** |
+| **Multimodal Tools (2 vision)** | `search_by_image` (OpenCLIP), `ocr_label` (EasyOCR) | In-memory base64 decode, 4MB memory limit, decompression bomb defense | **Verified** |
+| **Resources & Prompts** | `product://{code}`, `additive://{key}` \| `analyze_label`, `diet_audit` | Fast JSON attaching without tool latency; standardized inspection prompts | **Verified** |
+| **Transports & Security** | `stdio` (local/Claude Desktop) & `http` (streamable ASGI) | `Authorization: Bearer <token>` via constant-time comparison, 120 req/min rate limit | **Verified** |
+| **Server Test Suite** (`test_mcp_server.py`) | In-memory client schema checks, validation error paths, drift guard | 8 tests covering found/missing, bad barcode, unknown diets, additive misses | **8/8 Passed** |
+| **Agent Integration** (`run_agent.py --mcp`) | LangGraph agent dynamically swapped to MCP adapters (`McpRepo`, `McpSearcher`) | Zero graph code change needed; 100% verdict parity with local engine | **Verified** |
+| **Documentation** (`docs/mcp.md`) | Comprehensive developer & contributor specification | Tool matrix, JSON schemas, security architecture, Claude Desktop setup | **Complete** |
 
 ### Phase 6 Agent & Safety Invariant Evaluation
 
@@ -96,7 +108,7 @@ flowchart LR
 | **Structured LLM Validation** (`test_structured.py`) | Pydantic JSON validation, repair loop, format fallbacks | **3/3 Passed** | Tolerates thinking blocks & malformed JSON |
 | **Graph & Interrupt Tests** (`test_graph.py`) | Barcode routing, fake LLM analysts, human-in-the-loop pause/resume | **3/3 Passed** | Verified state persistence & memory saver |
 | **Invariant Sampling Eval** (`run_agent_eval.py`) | 50 sampled products against randomized diets & allergens | **50/50 Passed (100%)** | Zero undeclared allergen or diet false positives |
-| **End-to-End Suite** (`pytest tests`) | Full project test suite (Phases 0–6) | **64/64 Passed** | Clean integration across repositories, embeddings, and agents |
+| **End-to-End Suite** (`pytest tests`) | Full project test suite (Phases 0–7) | **71/71 Passed** | Clean integration across repositories, embeddings, agents, and MCP server |
 
 ### Phase 5 Retrieval Benchmark Results (Golden Set: 120 Queries)
 
@@ -186,22 +198,24 @@ pytest -m "not smoke"
 nutrition-and-food-label-analyzer/
 ├── apps/
 │   ├── api/            # FastAPI gateway
-│   ├── mcp_server/     # FastMCP server
+│   ├── mcp_server/     # FastMCP server launchers (stdio & HTTP)
 │   └── web/            # Next.js frontend
 ├── packages/labellens/ # Shared Python package
 │   ├── config.py       # Pydantic Settings configuration
 │   ├── data/           # Extraction, cleaning, DuckDB loader
 │   ├── embeddings/     # Text (BGE), Image (CLIP), Sparse (BM25)
-│   ├── retrieval/      # Qdrant hybrid retrieval & rerankers
+│   ├── retrieval/      # Qdrant hybrid retrieval & filters
 │   ├── agents/         # LangGraph state machine & analyst nodes
+│   ├── mcp_server/     # FastMCP server definition, tools, resources, prompts
+│   ├── mcp_client/     # Adapter toolbox for LangGraph & remote agents
 │   ├── db/             # SQLAlchemy 2 models & Alembic migrations
 │   └── llm/            # OpenAI-compatible provider abstraction
 ├── data/               # Gitignored data storage: raw/ interim/ clean/ images/
 ├── notebooks/          # Exploratory data analysis & experiments
 ├── evals/              # Golden eval sets and metric scripts
 ├── infra/              # Dockerfiles, CI workflows, deployment manifests
-├── docs/               # Data dictionary, design documentation
-├── tests/              # Unit, integration, and smoke tests
+├── docs/               # Data dictionary, design docs, mcp.md
+├── tests/              # Unit, integration, and MCP test suites
 ├── pyproject.toml      # Build and dependency definition (uv)
 ├── docker-compose.yml  # Local Postgres & Qdrant infrastructure
 ├── .env.example        # Environment variable template
