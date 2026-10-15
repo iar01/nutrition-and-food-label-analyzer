@@ -112,12 +112,19 @@ class ProductRepository:
         if not clean_q:
             return []
 
-        # 1. Trigram similarity query leveraging ix_products_name_trgm
+        # 1. Trigram similarity query leveraging ix_products_name_trgm (both whole string and word similarity)
         sim_col = func.similarity(Product.name, clean_q)
+        wsim_col = func.word_similarity(clean_q, Product.name)
         stmt = (
             select(Product)
-            .where(or_(Product.name.op("%")(clean_q), sim_col >= similarity_threshold))
-            .order_by(sim_col.desc())
+            .where(
+                or_(
+                    Product.name.op("%")(clean_q),
+                    sim_col >= similarity_threshold,
+                    wsim_col >= similarity_threshold,
+                )
+            )
+            .order_by(func.greatest(sim_col, wsim_col).desc())
             .limit(limit)
         )
         result = await session.execute(stmt)

@@ -79,13 +79,28 @@ def setup_test_infrastructure() -> None:
                         quality_flags=[],
                         search_text="Organic Wholemeal Bread BioFarm wholemeal wheat flour water yeast salt",
                     )
-                    session.add_all([p1, p2])
+                    p3 = Product(
+                        code="7622210449283",
+                        name="Chocolat Noir 70%",
+                        brand="Lindt",
+                        quantity="100g",
+                        categories=["en:chocolates", "en:dark-chocolates"],
+                        ingredients_text="cocoa mass, sugar, cocoa butter, vanilla.",
+                        nutriscore="d",
+                        nova=3,
+                        ecoscore="b",
+                        completeness=1.0,
+                        quality_flags=[],
+                        search_text="Chocolat Noir 70% Lindt cocoa mass sugar cocoa butter vanilla",
+                    )
+                    session.add_all([p1, p2, p3])
                     session.flush()
 
                     session.add_all(
                         [
                             ProductDietFlag(code="4008400401829", diet="vegan", value="no"),
                             ProductDietFlag(code="3017620422003", diet="vegan", value="yes"),
+                            ProductDietFlag(code="7622210449283", diet="vegan", value="yes"),
                             Nutrition(
                                 code="4008400401829",
                                 energy_kcal=539.0,
@@ -106,11 +121,23 @@ def setup_test_infrastructure() -> None:
                                 protein_g=9.0,
                                 salt_g=0.8,
                             ),
+                            Nutrition(
+                                code="7622210449283",
+                                energy_kcal=566.0,
+                                fat_g=41.0,
+                                sat_fat_g=24.0,
+                                carbs_g=34.0,
+                                sugars_g=29.0,
+                                protein_g=9.5,
+                                salt_g=0.02,
+                            ),
                         ]
                     )
                     session.commit()
-    except Exception:
-        pass
+    except Exception as exc:
+        import logging
+
+        logging.getLogger("conftest").warning("DB seeding error: %s", exc)
 
     # 2. Setup Qdrant collections & seed points if empty
     try:
@@ -161,6 +188,18 @@ def setup_test_infrastructure() -> None:
                     "has_image": False,
                     "categories": ["en:breads"],
                     "search_text": "Organic Wholemeal Bread BioFarm",
+                },
+                {
+                    "code": "7622210449283",
+                    "name": "Chocolat Noir 70%",
+                    "brands": "Lindt",
+                    "brand": "Lindt",
+                    "nutriscore": "d",
+                    "nova": 3,
+                    "diet_vegan": "yes",
+                    "has_image": False,
+                    "categories": ["en:chocolates", "en:dark-chocolates"],
+                    "search_text": "Chocolat Noir 70% Lindt cocoa mass sugar",
                 },
             ]
 
