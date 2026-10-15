@@ -166,9 +166,11 @@ def setup_test_infrastructure() -> None:
 
             points = []
             for item in test_items:
-                pid = point_id(item["code"])
-                dense_vec = text_emb.embed_query(item["search_text"]).tolist()
-                sparse_vec = sparse_emb.embed_query(item["search_text"])
+                code_str = str(item["code"])
+                search_str = str(item["search_text"])
+                pid = point_id(code_str)
+                dense_vec = text_emb.embed_query(search_str).tolist()
+                sparse_vec = sparse_emb.embed_query(search_str)
                 points.append(
                     models.PointStruct(
                         id=pid,
@@ -176,6 +178,7 @@ def setup_test_infrastructure() -> None:
                         payload=item,
                     )
                 )
+
             client.upsert(collection_name=cfg.products_collection, points=points)
     except Exception:
         pass
