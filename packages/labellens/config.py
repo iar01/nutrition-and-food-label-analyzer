@@ -93,6 +93,13 @@ class Settings(BaseSettings):
     image_keys_path: Path = Field(default=Path("data/raw/data_keys.gz"), alias="IMAGE_KEYS_PATH")
     embeddings_dir: Path = Field(default=Path("data/embeddings"), alias="EMBEDDINGS_DIR")
 
+    product_db_path: Path = Field(
+        default=Path("data/interim/products.duckdb"), alias="PRODUCT_DB_PATH"
+    )
+    checkpoint_db_path: Path = Field(
+        default=Path("data/checkpoints.sqlite"), alias="CHECKPOINT_DB_PATH"
+    )
+
     # Compatibility aliases
     @property
     def text_embed_model(self) -> str:

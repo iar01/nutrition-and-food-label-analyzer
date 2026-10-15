@@ -62,6 +62,16 @@ jobs:
         run: |
           uv run mypy packages
 
+      - name: Run Database Migrations
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: labellens
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        run: |
+          uv run alembic upgrade head
+
       - name: Run Unit Tests
         env:
           POSTGRES_HOST: localhost
@@ -73,3 +83,4 @@ jobs:
           QDRANT_PORT: 6333
         run: |
           uv run pytest -v -m "not smoke"
+

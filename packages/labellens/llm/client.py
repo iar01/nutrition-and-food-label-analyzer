@@ -1,8 +1,10 @@
 """Provider-agnostic OpenAI-compatible LLM client factory."""
 
+from langchain_openai import ChatOpenAI
 from openai import AsyncOpenAI, OpenAI
+from pydantic import SecretStr
 
-from labellens.config import Settings, get_settings
+from labellens.config import Settings, get_settings, settings
 
 
 def get_llm_client(settings: Settings | None = None) -> OpenAI:
@@ -26,4 +28,15 @@ def get_async_llm_client(settings: Settings | None = None) -> AsyncOpenAI:
         base_url=cfg.llm_base_url,
         api_key=cfg.llm_api_key,
         timeout=cfg.llm_timeout_seconds,
+    )
+
+
+def get_llm() -> ChatOpenAI:
+    return ChatOpenAI(
+        model=settings.llm_model,
+        base_url=settings.llm_base_url,
+        api_key=SecretStr(settings.llm_api_key),
+        temperature=settings.llm_temperature,
+        timeout=settings.llm_timeout_seconds,
+        max_retries=1,
     )

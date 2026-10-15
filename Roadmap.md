@@ -49,8 +49,8 @@ flowchart TD
     P2 --> P3["Phase 3: Structured Store Postgres - [x] Complete"]
     P3 --> P4["Phase 4: Embeddings & Vector DB Qdrant - [x] Complete"]
     P4 --> P5["Phase 5: Hybrid & Multimodal Retrieval - [x] Complete"]
-    P5 --> P6["Phase 6: LangGraph Agents - [ ] Next Up"]
-    P6 --> P7["Phase 7: FastMCP Server - [ ] Planned"]
+    P5 --> P6["Phase 6: LangGraph Agents - [x] Complete"]
+    P6 --> P7["Phase 7: FastMCP Server - [ ] Next Up"]
     P7 --> P8["Phase 8: FastAPI Gateway - [ ] Planned"]
     P8 --> P9["Phase 9: Next.js Frontend - [ ] Planned"]
     P9 --> P10["Phase 10: Formal Evals - [ ] Planned"]
@@ -60,9 +60,9 @@ flowchart TD
     classDef next fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff;
     classDef planned fill:#4b5563,stroke:#374151,stroke-width:1px,color:#fff;
 
-    class P0,P1,P2,P3,P4,P5 done;
-    class P6 next;
-    class P7,P8,P9,P10,P11 planned;
+    class P0,P1,P2,P3,P4,P5,P6 done;
+    class P7 next;
+    class P8,P9,P10,P11 planned;
 ```
 
 ### Phase Milestone Checklist
@@ -72,7 +72,7 @@ flowchart TD
 - [x] **Phase 3 — Structured store in PostgreSQL (Week 3)**: SQLAlchemy 2 declarative models, Alembic migrations, streaming COPY loader, trigram fuzzy indexes.
 - [x] **Phase 4 — Embeddings and the Vector Database (Week 3–5)**: Qdrant dual-collection setup, BGE dense, BM25 sparse, OpenCLIP image vectors, HNSW & INT8 scalar quantization benchmarks.
 - [x] **Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6)**: Reciprocal Rank Fusion (RRF), cross-encoder reranker, multimodal router.
-- [ ] **Phase 6 — Agents with LangGraph (Week 6–8)**: Multi-agent supervisor, additive analyst, nutrition/diet analyst, critic, human-in-the-loop.
+- [x] **Phase 6 — Agents with LangGraph (Week 6–8)**: Multi-agent supervisor, additive analyst, nutrition/diet analyst, critic, human-in-the-loop.
 - [ ] **Phase 7 — The MCP server (Week 8)**: FastMCP server exposing tools, resources, and prompt templates.
 - [ ] **Phase 8 — API gateway with FastAPI (Week 8–9)**: Async API, SSE streaming chat, CORS, Pydantic v2 schemas.
 - [ ] **Phase 9 — Frontend with Next.js (Week 9–10)**: Mobile-responsive UI, camera barcode scanning, live streaming chat.
@@ -507,7 +507,7 @@ Late fusion for label photos: `score = w_text * text_score + w_image * image_sco
 
 **Checkpoint questions.** Why does hybrid beat dense alone on brand names and E-numbers? What does RRF do and why does it avoid score calibration problems? When is a reranker not worth its latency?
 
-## 10. Phase 6 — Agents with LangGraph (Week 6–8) [ ] Next Up
+## 10. Phase 6 — Agents with LangGraph (Week 6–8) [x] Complete
 
 **Goal.** A multi-agent graph that takes any input type and returns a grounded, cited, profile-aware answer.
 
@@ -571,7 +571,7 @@ class AgentState(TypedDict):
 
 **Checkpoint questions.** What is a reducer and why does `evidence` need one? Why compute verdicts outside the LLM? What would break if the critic were removed, and how would your evals show it?
 
-## 11. Phase 7 — The MCP server (Week 8) [ ] Planned
+## 11. Phase 7 — The MCP server (Week 8) [ ] Next Up
 
 **Goal.** Your retrieval and data tools exposed through a Model Context Protocol server, consumed by your own agent and by any external MCP client.
 

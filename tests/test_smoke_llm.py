@@ -18,9 +18,9 @@ def test_ollama_llm_smoke() -> None:
     try:
         response = client.chat.completions.create(
             model=settings.llm_model,
-            messages=[{"role": "user", "content": "Respond with the word 'READY' only."}],
+            messages=[{"role": "user", "content": "Respond with the word 'READY' only. /no_think"}],
             temperature=0.0,
-            max_tokens=10,
+            max_tokens=200,
         )
         content = response.choices[0].message.content or ""
         print(f"\n[Smoke Test Success] Model '{settings.llm_model}' reply: {content.strip()}")
