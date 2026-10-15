@@ -224,6 +224,18 @@ LabelLens is an educational and informational tool. **It does not provide medica
 
 ---
 
-## 8. License
+## 8. Author & Contact
+
+**Abdullah Rafi**
+
+- 📧 **Email:** [abdullahrafi@outlook.com](mailto:abdullahrafi@outlook.com)
+- 💼 **LinkedIn:** [linkedin.com/in/abdullahrafi1](https://www.linkedin.com/in/abdullahrafi1/)
+- 🌐 **Linktree:** [linktr.ee/iamaronee](https://linktr.ee/iamaronee)
+- 🐙 **GitHub:** [@iar01](https://github.com/iar01)
+
+---
+
+## 9. License
 
 Code is licensed under the [MIT License](LICENSE).
+
