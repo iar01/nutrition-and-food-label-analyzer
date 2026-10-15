@@ -43,6 +43,9 @@ dependencies = [
     "fastmcp>=4.1.0",
     "langchain-mcp-adapters>=0.3.1",
     "easyocr>=1.7.2",
+    "fastapi>=0.143.2",
+    "uvicorn[standard]>=0.54.0",
+    "python-multipart>=0.0.32",
 ]
 
 [project.optional-dependencies]

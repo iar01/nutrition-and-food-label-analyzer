@@ -18,6 +18,7 @@ from labellens.agents.deps import Deps
 from labellens.agents.nodes.alternatives import alternatives_node
 from labellens.agents.rules import compute_verdicts, nutrition_levels
 from labellens.agents.state import AgentState
+from labellens.agents.types import Allergen, Diet, Goal, Grade
 
 # NEVER log to stdout: with the stdio transport, stdout carries the protocol itself.
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
@@ -29,25 +30,6 @@ Image.MAX_IMAGE_PIXELS = 25_000_000  # refuse decompression bombs
 
 READ_ONLY = {"readOnlyHint": True, "destructiveHint": False, "openWorldHint": False}
 
-Diet = Literal["vegan", "vegetarian", "gluten_free", "lactose_free", "palm_oil_free", "nut_free"]
-Allergen = Literal[
-    "milk",
-    "eggs",
-    "peanuts",
-    "nuts",
-    "soy",
-    "gluten",
-    "fish",
-    "crustaceans",
-    "molluscs",
-    "sesame",
-    "celery",
-    "mustard",
-    "lupin",
-    "sulphites",
-]
-Goal = Literal["low_sugar", "low_salt", "low_sat_fat"]
-Grade = Literal["a", "b", "c", "d", "e"]
 Barcode = Annotated[
     str,
     Field(

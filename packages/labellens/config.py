@@ -103,6 +103,15 @@ class Settings(BaseSettings):
     mcp_url: str = Field(default="http://127.0.0.1:8765/mcp", alias="MCP_URL")
     mcp_auth_token: str | None = Field(default=None, alias="MCP_AUTH_TOKEN")
 
+    api_keys: str | None = Field(default=None, alias="API_KEYS")  # comma separated
+    cors_origins: str = Field(
+        default="http://localhost:3000", alias="CORS_ORIGINS"
+    )  # comma separated
+    api_max_upload_bytes: int = Field(default=4_000_000, alias="API_MAX_UPLOAD_BYTES")
+    api_rate_limit_per_minute: int = Field(default=60, alias="API_RATE_LIMIT_PER_MINUTE")
+    api_max_concurrent_runs: int = Field(default=2, alias="API_MAX_CONCURRENT_RUNS")
+    feedback_db_path: Path = Field(default=Path("data/feedback.sqlite"), alias="FEEDBACK_DB_PATH")
+
     # Compatibility aliases
     @property
     def text_embed_model(self) -> str:
