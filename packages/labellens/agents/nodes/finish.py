@@ -54,7 +54,7 @@ def synthesizer(state: AgentState, deps: Deps) -> dict[str, Any]:
 
 
 def critic(state: AgentState, deps: Deps) -> dict[str, Any]:
-    if getattr(deps.llm, "__class__", None).__name__ == "FakeLLM":
+    if type(deps.llm).__name__ == "FakeLLM":
         return {"critic_feedback": None, "messages": [AIMessage(content=state.get("answer") or "")]}
     draft = state.get("draft", {})
     text = f"{draft.get('summary', '')} {' '.join(draft.get('tips', []))}"

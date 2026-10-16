@@ -8,7 +8,6 @@ from starlette.concurrency import run_in_threadpool
 
 from labellens.agents.types import Allergen, Diet, Grade
 from labellens.api.errors import ApiError
-from labellens.config import settings
 from labellens.api.runner import to_product_summary
 from labellens.api.schemas import (
     CheckResult,
@@ -22,6 +21,7 @@ from labellens.api.schemas import (
 )
 from labellens.api.security import guard
 from labellens.api.services import Services, get_services
+from labellens.config import settings
 
 logger = logging.getLogger("labellens.api")
 
@@ -90,7 +90,9 @@ async def product_image(
     path = settings.images_dir / f"{code}.jpg"  # the pattern guarantees digits only: no path tricks
     if not path.is_file():
         raise ApiError(404, "no_image", "No image for that product.")
-    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
+    return FileResponse(
+        path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"}
+    )
 
 
 @v1.get("/search", response_model=SearchResponse, tags=["products"])
