@@ -1,186 +1,280 @@
 # LabelLens: Nutrition & Food Label Analyzer
 
-> **LabelLens** is an open-source, multimodal, agentic food label and nutrition analysis platform. It identifies products via barcodes, packaging photos, or names, explains additives and ingredients with grounded evidence, verifies strict dietary and allergen constraints with deterministic rule engines, and exposes all capabilities through standard Model Context Protocol (MCP) tools.
+> **LabelLens** is an open-source, multimodal food label and nutrition analysis platform. It identifies packaged food products via barcode scans, ingredient list photos, or text search; extracts and explains additives and E-numbers with grounded evidence; verifies strict dietary and allergen constraints using deterministic rule engines; orchestrates multi-agent reasoning through LangGraph; and surfaces capabilities via a mobile-first Next.js web application and standard Model Context Protocol (MCP) tools.
 
 ---
 
-## 1. Architecture Overview
+## 1. Project Introduction
 
-### 1.1 Online Inference Architecture
+Packaged food labels are deliberately hard to navigate: dense ingredient lists, obscure chemical additive numbers (E-numbers), ambiguous allergen warnings, and misleading marketing claims. Consumers with life-threatening allergies, strict dietary commitments (vegan, vegetarian, gluten-free, lactose-free, nut-free, palm-oil-free), or specific nutritional goals need immediate, trustworthy, and verifiable answers in a supermarket aisle.
+
+LabelLens solves this with three core capabilities:
+
+1. **Deterministic-First Analysis:** Barcode lookups, allergen matching, and dietary compliance are computed strictly via deterministic SQL indexes and rule engines—never probabilistic LLM guesswork. The LLM only explains and synthesizes evidence.
+2. **Multimodal Agentic Orchestration:** A stateful LangGraph multi-agent pipeline routes queries, performs parallel ingredient, additive, and diet analyses, resolves ambiguous product matches through human-in-the-loop choice dialogs, and validates output safety with a bounded revision critic.
+3. **Dual-Surface Access (Web & MCP):** A mobile-first Next.js web application provides in-browser camera barcode scanning and streaming analysis, while a standard FastMCP server enables direct integration with external MCP clients such as Claude Desktop.
+
+---
+
+## 2. Architecture Overview
+
+LabelLens separates offline data transformation from online reactive inference:
 
 ```mermaid
-graph TD
-    User["User / Browser Client"] --> UI["Next.js Frontend (Scanner & Chat)"]
-    UI -->|"REST & SSE Streaming"| Gateway["FastAPI Gateway"]
-    Gateway --> AgentGraph["LangGraph Multi-Agent Orchestrator"]
-    AgentGraph --> MCPClient["MCP Client Layer"]
-    MCPClient --> MCPServer["FastMCP Server"]
-
-    subgraph Stores["Deterministic Stores & Inference"]
-        MCPServer --> PG[("PostgreSQL 16: Products, Rules, Profiles")]
-        MCPServer --> QdrantProd[("Qdrant: Products (Dense + Sparse + CLIP)")]
-        MCPServer --> QdrantKnow[("Qdrant: Knowledge (Additives, Diets)")]
-        MCPServer --> Vision["OCR & OpenCLIP Engine"]
+flowchart TD
+    subgraph Clients["Client Layer"]
+        Browser["Mobile / Desktop Browser"]
+        ClaudeDesktop["Claude Desktop / MCP Client"]
     end
 
-    AgentGraph -.->|"OpenAI-compatible Endpoint"| LLM["Local Ollama / Cloud LLM API"]
+    subgraph Frontend["Next.js Web Application (apps/web)"]
+        Scanner["Camera Barcode Scanner (ZXing)"]
+        UI["React 19 / Tailwind CSS v4 / Base UI"]
+        Proxy["API Proxy Route Handler (/api/[...path])"]
+        ProfileStore["Client localStorage Profile (Privacy-First)"]
+    end
+
+    subgraph Gateway["API Gateway (FastAPI)"]
+        AuthMiddleware["X-API-Key Authentication"]
+        RateLimiter["Sliding-Window Rate Limiter"]
+        SSERoute["Server-Sent Events (SSE) Streaming (/v1/chat)"]
+        ProductRoutes["Cached Product & Search Endpoints"]
+    end
+
+    subgraph AgentSystem["Multi-Agent Orchestrator (LangGraph)"]
+        Router["Router Node"]
+        CandidateFinder["Candidate Retrieval"]
+        Picker["Human-in-the-Loop Choice Dialog"]
+        ParallelAnalysts["Parallel Analysts (Ingredients, Additives, Diets)"]
+        Synthesizer["Synthesizer Node"]
+        Critic["Safety & Invariant Critic"]
+    end
+
+    subgraph MCP["Model Context Protocol Layer"]
+        MCPServer["FastMCP Server (packages/labellens/mcp_server)"]
+        MCPTools["10 Tools | 2 Resources | 2 Prompts"]
+    end
+
+    subgraph Storage["Storage & Inference Infrastructure"]
+        DuckDB[("DuckDB: Relational Products Store")]
+        Qdrant[("Qdrant: Dense + Sparse + CLIP Vectors")]
+        SQLite[("SQLite: Thread Checkpoints & Feedback")]
+        Ollama["Local LLM: Ollama (OpenAI-compatible)"]
+    end
+
+    Browser --> Scanner
+    Browser --> UI
+    UI <--> ProfileStore
+    UI -->|"Same-Origin Fetch"| Proxy
+    Proxy -->|"HTTP + Injected Secret X-API-Key"| Gateway
+
+    ClaudeDesktop <-->|"stdio / Streamable HTTP"| MCPServer
+    MCPServer <--> Storage
+
+    Gateway --> AgentSystem
+    AgentSystem <--> Storage
+    AgentSystem <--> Ollama
 ```
 
-### 1.2 Offline Data & Embedding Pipeline
+### Core Components and Responsibilities
 
-```mermaid
-flowchart LR
-    OFF["Open Food Facts Parquet"] --> DuckDB["DuckDB Cleaning Engine"]
-    DuckDB --> Clean["Clean Parquet & Pandera Schema"]
-    Clean --> PG[("PostgreSQL Store")]
-    Clean --> Dense["BGE Dense & BM25 Sparse Embeddings"]
-    Dense --> Qdrant[("Qdrant Products Collection")]
-    S3["OFF AWS S3 Bucket"] --> Images["400px Images"]
-    Images --> CLIP["OpenCLIP ViT-B/32"]
-    CLIP --> Qdrant
-    Cards["Additives & Diet YAML"] --> Knowledge[("Qdrant Knowledge Collection")]
-```
-
-### Core Design Principles
-1. **Deterministic first, LLM second:** Barcode lookups, allergen matching, and diet verdicts are computed with strict SQL and rule engines, never LLM guessing. The LLM only explains and orchestrates.
-2. **Provider-agnostic LLM:** Unified OpenAI-compatible interface; model and endpoint configured via environment variables (`LLM_MODEL`, `LLM_BASE_URL`).
-3. **Everything through MCP tools:** The same tools serve internal LangGraph agents, the FastAPI gateway, and external MCP clients (such as Claude Desktop).
-4. **Privacy-first profile:** Dietary preferences and allergen lists are stored client-side in the browser, not saved on external servers.
+- **Next.js Web Client (`apps/web`):** Built with Next.js 16 (App Router, Turbopack) and Tailwind CSS v4. Features client-side barcode scanning (`@zxing/browser`) with GS1 check digit validation, camera orientation constraints, client-side photo resizing with HTML5 Canvas (stripping EXIF metadata), and zero-leakage proxy routing.
+- **FastAPI Gateway (`packages/labellens/api`):** Asynchronous gateway providing request validation (Pydantic v2), constant-time API key verification, sliding-window rate limiting, and real-time SSE event streaming (`step`, `choose_product`, `final`, `done`).
+- **LangGraph Agent Engine (`packages/labellens/agents`):** Stateful cyclical graph managing query classification, product retrieval, parallel analyst execution, interactive disambiguation interrupts, and critique loops.
+- **FastMCP Server (`packages/labellens/mcp_server`):** Exposes 10 read-only deterministic and multimodal inspection tools over `stdio` and streamable HTTP transports.
+- **Hybrid Retrieval System (`packages/labellens/retrieval`):** Combines dense vector search (`BAAI/bge-small-en-v1.5`), sparse BM25 lexical search (`FastEmbed`), OpenCLIP visual embedding (`ViT-B-32`), Reciprocal Rank Fusion (RRF), and cross-encoder reranking (`BAAI/bge-reranker-base`).
+- **Data Persistence:** DuckDB provides millisecond-latency analytical lookups; Qdrant handles multi-vector similarity; SQLite manages conversation state checkpoints and user feedback.
 
 ---
 
-## 2. Project Roadmap & Implementation Status
+## 3. Execution Lifecycle & Workflows
+
+### 3.1 Online Request Lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User (Browser)
+    participant Web as Next.js Server Proxy
+    participant API as FastAPI Gateway
+    participant Graph as LangGraph Orchestrator
+    participant Rules as Deterministic Rule Engine
+    participant LLM as Ollama / LLM Provider
+
+    User->>Web: Scan Barcode / Search Query / Photo
+    Web->>API: POST /api/v1/chat (with X-API-Key)
+    API->>Graph: Initialize Thread & Run Graph
+
+    Graph->>API: SSE Event: step ("router", "Understanding request")
+    API-->>User: Stream Progress Step
+
+    alt Query is Ambiguous (Multiple Matches)
+        Graph->>API: SSE Event: choose_product (Candidates List)
+        API-->>User: Display Disambiguation Dialog
+        User->>API: POST /api/v1/chat (with thread_id & chosen code)
+        API->>Graph: Resume Graph Execution
+    end
+
+    par Parallel Domain Analysis
+        Graph->>Rules: Compute Diet & Allergen Status (Strict Rules)
+        Rules-->>Graph: Verdicts (Suitable / Contains / Unknown)
+        Graph->>LLM: Analyze Ingredient Structure
+        LLM-->>Graph: Ingredient Findings
+        Graph->>Rules: Match Additive Cards & E-Numbers
+        Rules-->>Graph: Additive Evidence & Notes
+    end
+
+    Graph->>Graph: Join Analyst Outputs
+    Graph->>LLM: Draft Summary & Plain-English Tips
+    LLM-->>Graph: Draft Markdown Response
+
+    Graph->>Graph: Critic Validation (Check Banned Claims & Declared Allergens)
+    alt Critic Detects Invariant Violation
+        Graph->>LLM: Bounded Revision Prompt
+        LLM-->>Graph: Revised Response
+    end
+
+    Graph->>API: SSE Event: final (Structured AnalysisOut)
+    Graph->>API: SSE Event: done (Status: Complete)
+    API-->>User: Render Full Analysis View (Nutrition, Verdicts, E-Numbers)
+```
+
+### 3.2 Offline Data Preparation Pipeline
 
 ```mermaid
 flowchart LR
-    P0["Phase 0: Setup ✅"] --> P1["Phase 1: EDA ✅"]
-    P1 --> P2["Phase 2: Cleaning ✅"]
-    P2 --> P3["Phase 3: Postgres ✅"]
-    P3 --> P4["Phase 4: Vectors ✅"]
-    P4 --> P5["Phase 5: Retrieval ✅"]
-    P5 --> P6["Phase 6: Agents ✅"]
-    P6 --> P7["Phase 7: MCP ✅"]
-    P7 --> P8["Phase 8: API ✅"]
-    P8 --> P9["Phase 9: Web ✅"]
-    P9 --> P10["Phase 10: Evals 🔄"]
-    P10 --> P11["Phase 11: Deploy ⏹"]
+    OFF["Open Food Facts Bulk Parquet (food.parquet)"] --> InPlaceDuckDB["DuckDB In-Place Extraction (data/extract.py)"]
+    InPlaceDuckDB --> Interim["Interim Parquet (completeness >= 0.5)"]
+    Interim --> CleaningPipeline["Cleaning Pipeline (data/pipeline.py)"]
+    CleaningPipeline --> GS1Check["GS1 Checksum Filter & Deduplication"]
+    GS1Check --> Pandera["Pandera Schema Validation"]
+    Pandera --> CleanParquet["Clean Parquet (data/clean/products.parquet)"]
+    
+    CleanParquet --> BuildDuckDB["Build DuckDB Store (scripts/build_product_db.py)"]
+    CleanParquet --> DenseSparse["BGE Dense + BM25 Sparse Indexing (scripts/index_products.py)"]
+    
+    YAML["Additive & Diet Knowledge YAML (docs/knowledge/)"] --> IndexKnowledge["Chunk & Index Knowledge (scripts/index_knowledge.py)"]
+    
+    CleanParquet --> DownloadImages["Download 400px Images (scripts/download_images.py)"]
+    DownloadImages --> ClipEmbed["OpenCLIP ViT-B/32 (scripts/embed_images.py)"]
+    ClipEmbed --> AttachVectors["Attach Image Vectors (scripts/attach_image_vectors.py)"]
 
-    classDef done fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff;
-    classDef current fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
-    classDef pending fill:#6b7280,stroke:#4b5563,stroke-width:1px,color:#fff;
-
-    class P0,P1,P2,P3,P4,P5,P6,P7,P8,P9 done;
-    class P10 current;
-    class P11 pending;
+    BuildDuckDB --> ProductDB[("products.duckdb")]
+    DenseSparse --> QdrantProducts[("Qdrant: products")]
+    IndexKnowledge --> QdrantKnowledge[("Qdrant: knowledge")]
+    AttachVectors --> QdrantProducts
 ```
-
-### Phase Progress Checklist
-- [x] **Phase 0: Project Setup** — `uv`, Python 3.12, Docker Compose (PostgreSQL 16 & Qdrant), healthchecks, CI quality tooling, Ollama smoke test.
-- [x] **Phase 1: Download & Understand Data** — Open Food Facts bulk Parquet ingestion, in-place DuckDB exploration, subset filtration rules.
-- [x] **Phase 2: Cleaning & Normalization** — GS1 barcode checksum validation, Pandera schema enforcement, data quality profiling, `products.parquet` generated.
-- [x] **Phase 3: Structured PostgreSQL Store** — SQLAlchemy 2 declarative models, Alembic migrations, high-throughput streaming COPY loader, pg_trgm fuzzy search indexes.
-- [x] **Phase 4: Embeddings & Vector Database** — Qdrant dual-collection setup (`products` & `knowledge`), BGE dense text embeddings, FastEmbed BM25 sparse vectors, OpenCLIP image vectors, HNSW tuning, INT8 scalar quantization benchmarks.
-- [x] **Phase 5: Hybrid & Multimodal Retrieval** — Reciprocal Rank Fusion (RRF), cross-encoder reranking (`BAAI/bge-reranker-base`), multimodal query router, golden set ablation benchmarks.
-- [x] **Phase 6: Agents with LangGraph** — Stateful multi-agent graph (router, candidates finder, interactive interrupt picker, parallel ingredient/additive/diet analysts, bounded revision critic, and template fallbacks).
-- [x] **Phase 7: FastMCP Server** — Model Context Protocol server exposing 10 tools, 2 resources, and 2 prompts across stdio & Streamable HTTP transports with bearer-token auth, sliding-window rate limiting, and Claude Desktop integration.
-- [x] **Phase 8: API Gateway with FastAPI** — Async FastAPI gateway, Server-Sent Events (SSE) streaming chat responses, Pydantic v2 schemas, sliding-window rate limiting, CORS, and comprehensive test suite (**23/23 Passed**).
-- [x] **Phase 9: Frontend with Next.js** — Mobile-first web application under `apps/web` (Next.js 16 App Router, Turbopack, Tailwind CSS v4, shadcn/ui) with in-browser ZXing camera scanner, GS1 checksum verification, client-side canvas photo resize & EXIF stripping, disambiguation dialogs, visual certainty hierarchy (dashed borders, unique icons, explicit wording), client-side `localStorage` profile store, same-origin API proxy, and Playwright E2E test suite (**12/12 Passed**).
-- [ ] **Phase 10: Formal Evaluation** — Golden evaluation datasets for allergen detection, retrieval Recall/MRR, and multi-agent tracing.
-- [ ] **Phase 11: Production Hardening & Cloud Deployment** — Multi-stage Docker packaging, GitHub Container Registry, cloud deployment on free tiers.
-
-### Phase 9 Frontend Capabilities & End-to-End Verification
-
-| Component | Scope | Coverage & Details | Status |
-|---|---|---|:---:|
-| **Scanner & Input Modes** (`apps/web/src/components`) | Camera Barcode, Manual Barcode, Photo Upload, Search | Lazy-loaded `@zxing/browser` with rear camera constraints and GS1 check digit filter; HTML5 `<canvas>` photo resize & EXIF stripping | **Verified** |
-| **Visual Language of Certainty** | Verdict chips, Banners, Score badges | 3-valued status with dashed border, unique icons, and plain-English wording for `unknown`; never relies on colour alone | **Verified** |
-| **Analysis Views** | Nutrition facts, Additives, Alternatives, Sources | Interactive nutrition table with FSA traffic lights, highlighted E-numbers, knowledge cards, evidence links, and feedback buttons | **Verified** |
-| **Live Streaming & Disambiguation** | SSE parser, Progress steps, Choice dialog | Resilient buffer parsing across arbitrary packet boundaries, live step progress, interactive product disambiguation | **Verified** |
-| **Secure API Proxy** (`src/app/api/[...path]`) | Next.js server route handler | Allow-listed endpoints, server-only `X-API-Key` injection, SSE streaming pass-through, no client secrets | **Verified** |
-| **Playwright E2E Suite** (`apps/web/e2e/app.spec.ts`) | Mocked API end-to-end tests | 6 tests across Desktop Chrome and Mobile (Pixel 7) emulated devices | **12/12 Passed** |
-| **Build & Type Safety** | Turbopack production build & TypeScript | `tsc --noEmit`, ESLint, `next build` static + dynamic routes | **Verified** |
-
-### Phase 8 FastAPI Gateway Capabilities & Evaluation
-
-| Endpoint / Feature | Method & Route | Details | Status |
-|---|---|---|:---:|
-| **Streaming Chat** | `POST /v1/chat` | Server-Sent Events (SSE) streaming node steps (`step`), product choices (`choose_product`), and final analysis (`final`) | **Verified** |
-| **Product Inspection** | `GET /v1/products/{code}` & `/image` | In-memory cached product metadata and Open Food Facts image proxy | **Verified** |
-| **Candidate Search** | `GET /v1/search` | Fast hybrid text search with brand and allergen query parameters | **Verified** |
-| **User Feedback** | `POST /v1/feedback` | SQLite persistence for thumbs up/down user votes linked to thread IDs | **Verified** |
-| **Security & Rate Limiting** | Auth middleware & SlowAPI | `X-API-Key` verification against constant-time hashes, sliding-window rate limits, 4MB upload guard | **Verified** |
-| **Gateway Test Suite** (`tests/test_api.py`) | Async HTTPX tests | Health, auth rejection, rate limit triggers, SSE streaming, product lookup, upload bounds | **23/23 Passed** |
-
-### Phase 7 FastMCP Server Capabilities & Evaluation
-
-
-| Component | Scope | Coverage & Details | Status |
-|---|---|---|:---:|
-| **Deterministic Tools (8 core)** | `lookup_by_barcode`, `search_products`, `search_knowledge`, `get_nutrition`, `explain_additive`, `check_diet_fit`, `find_alternatives`, `compare_products` | Full parameter validation (EAN/UPC regex, literal enums, max length guards), read-only DuckDB / Qdrant access | **Verified** |
-| **Multimodal Tools (2 vision)** | `search_by_image` (OpenCLIP), `ocr_label` (EasyOCR) | In-memory base64 decode, 4MB memory limit, decompression bomb defense | **Verified** |
-| **Resources & Prompts** | `product://{code}`, `additive://{key}` \| `analyze_label`, `diet_audit` | Fast JSON attaching without tool latency; standardized inspection prompts | **Verified** |
-| **Transports & Security** | `stdio` (local/Claude Desktop) & `http` (streamable ASGI) | `Authorization: Bearer <token>` via constant-time comparison, 120 req/min rate limit | **Verified** |
-| **Server Test Suite** (`test_mcp_server.py`) | In-memory client schema checks, validation error paths, drift guard | 8 tests covering found/missing, bad barcode, unknown diets, additive misses | **8/8 Passed** |
-| **Agent Integration** (`run_agent.py --mcp`) | LangGraph agent dynamically swapped to MCP adapters (`McpRepo`, `McpSearcher`) | Zero graph code change needed; 100% verdict parity with local engine | **Verified** |
-| **Documentation** (`docs/mcp.md`) | Comprehensive developer & contributor specification | Tool matrix, JSON schemas, security architecture, Claude Desktop setup | **Complete** |
-
-### Phase 6 Agent & Safety Invariant Evaluation
-
-| Test Suite / Eval | Scope | Result | Details |
-|---|---|:---:|---|
-| **Deterministic Rule Tests** (`test_rules.py`) | Allergen & diet logic, 3-valued status, FSA traffic lights | **10/10 Passed** | 100% agreement with safety invariants |
-| **Structured LLM Validation** (`test_structured.py`) | Pydantic JSON validation, repair loop, format fallbacks | **3/3 Passed** | Tolerates thinking blocks & malformed JSON |
-| **Graph & Interrupt Tests** (`test_graph.py`) | Barcode routing, fake LLM analysts, human-in-the-loop pause/resume | **3/3 Passed** | Verified state persistence & memory saver |
-| **Invariant Sampling Eval** (`run_agent_eval.py`) | 50 sampled products against randomized diets & allergens | **50/50 Passed (100%)** | Zero undeclared allergen or diet false positives |
-| **End-to-End Suite** (`pytest tests`) | Full project test suite (Phases 0–7) | **71/71 Passed** | Clean integration across repositories, embeddings, agents, and MCP server |
-
-### Phase 5 Retrieval Benchmark Results (Golden Set: 120 Queries)
-
-| Retrieval Pipeline | Recall@1 | Recall@5 | Recall@10 | MRR | Avg Latency (ms) |
-|---|:---:|:---:|:---:|:---:|:---:|
-| **1. Dense Only (BGE)** | 0.608 | 0.775 | 0.808 | 0.681 | 27.2 ms |
-| **2. Sparse Only (BM25)** | 0.658 | 0.808 | 0.858 | 0.723 | 10.9 ms |
-| **3. Hybrid RRF (Dense + BM25)** | 0.658 | 0.808 | 0.850 | 0.730 | 30.2 ms |
-| **4. Hybrid RRF + Cross-Encoder Reranker** | **0.667** | **0.808** | **0.858** | **0.736** | 195.8 ms |
-
-*See [`docs/retrieval_results.md`](docs/retrieval_results.md) for detailed ablation analysis.*
 
 ---
 
-## 3. Requirements
+## 4. Technology Stack
 
-- **Operating System:** Windows 10/11 (WSL2), Linux, or macOS
+### Languages & Frameworks
 - **Python:** 3.12 (managed via `uv`)
-- **Docker & Docker Compose:** Docker Engine 24+ / Compose v2
-- **Node.js:** 20+ LTS (for Next.js frontend)
-- **Local LLM:** Ollama (default: `qwen2.5:7b` or `qwen2.5:3b`)
+- **Node.js:** 20+ LTS / TypeScript 5.x
+- **Backend API:** FastAPI 0.143+, Uvicorn 0.54+, Pydantic v2.7+, Pydantic Settings
+- **Frontend App:** Next.js 16.4 (App Router, Turbopack), React 19, Tailwind CSS v4, Base UI, shadcn/ui
+
+### Agents & MCP
+- **Agent Orchestrator:** LangGraph 0.2+, LangChain Core 0.3+, LangChain OpenAI
+- **Checkpointer:** `langgraph-checkpoint-sqlite` 3.1+
+- **Model Context Protocol:** FastMCP 4.1+, `langchain-mcp-adapters` 0.3+
+
+### AI, Machine Learning & Vision
+- **LLM Engine:** Ollama (default: `qwen2.5:7b` or `qwen2.5:3b`) via OpenAI-compatible API
+- **Dense Embeddings:** `BAAI/bge-small-en-v1.5` via `sentence-transformers` 6.1+
+- **Sparse Embeddings:** `Qdrant/bm25` via `fastembed` 0.9+
+- **Image Embeddings:** `ViT-B-32` (`openai` weights) via `open-clip-torch` 3.3+ and PyTorch
+- **Reranker:** `BAAI/bge-reranker-base` via `sentence-transformers`
+- **OCR Engine:** EasyOCR 1.7+ (PyTorch backend)
+
+### Data Processing & Storage
+- **Analytical DB:** DuckDB 1.0+
+- **Vector DB:** Qdrant 1.9+ (named dense, sparse, and image vectors with payload filters)
+- **Relational DB:** PostgreSQL 16 (SQLAlchemy 2.0, Alembic, asyncpg, psycopg)
+- **Data Validation:** Pandera 0.19+, PyArrow 15.0+, Pandas 2.2+
+
+### Testing & Tooling
+- **Unit & Integration:** Pytest 8.0+, `pytest-asyncio`, HTTPX 0.27+
+- **E2E Testing:** Playwright 1.64+ (Desktop Chrome & Pixel 7 Mobile emulation)
+- **Linters & Typers:** Ruff 0.4+, Mypy 1.10+, ESLint 9+
 
 ---
 
-## 4. Quick Start
+## 5. Prerequisites
 
-### 1. Clone & Set Up Python Environment
+Before installing LabelLens, verify that your environment satisfies:
+
+- **Operating System:** Windows 10/11 (PowerShell / WSL2), Ubuntu/Debian Linux, or macOS.
+- **Python:** Version 3.12.x.
+- **`uv` Package Manager:** Fast Python package and environment manager ([Install uv](https://docs.astral.sh/uv/getting-started/installation/)).
+- **Node.js & npm:** Node.js 20+ LTS and npm 10+.
+- **Docker & Docker Compose:** Docker Engine 24+ and Docker Compose v2 (to run Qdrant and PostgreSQL).
+- **Ollama:** Local LLM runner installed ([ollama.com](https://ollama.com)) with at least 8 GB of system RAM for running `qwen2.5:7b` or `qwen2.5:3b`.
+
+---
+
+## 6. Installation and Setup
+
+### Step 1: Clone the Repository
 ```bash
-# Clone the repository
 git clone https://github.com/iar01/nutrition-and-food-label-analyzer.git
 cd nutrition-and-food-label-analyzer
+```
 
-# Create virtual environment with Python 3.12 and install dependencies
+### Step 2: Set Up Python Virtual Environment
+Using `uv`:
+
+**Windows PowerShell:**
+```powershell
 uv venv --python 3.12 .venv
-.venv\Scripts\activate      # On Windows
-# source .venv/bin/activate # On Linux/macOS
-
-# Install development package
+.venv\Scripts\activate
 uv pip install -e ".[dev]"
 ```
 
-### 2. Configure Environment
+**Linux / macOS:**
 ```bash
-cp .env.example .env
+uv venv --python 3.12 .venv
+source .venv/bin/activate
+uv pip install -e ".[dev]"
 ```
-Inspect `.env` and verify database, vector store, and LLM connection settings.
 
-### 3. Start Infrastructure (Postgres & Qdrant)
+### Step 3: Install Frontend Dependencies
+```bash
+cd apps/web
+npm install
+cd ../..
+```
+
+### Step 4: Configure Environment Files
+
+1. **Root Backend Configuration:**
+   Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Open `.env` and verify key settings:
+   ```ini
+   APP_ENV=development
+   API_KEYS=your_generated_api_key_here
+   LLM_BASE_URL=http://127.0.0.1:11434/v1
+   LLM_MODEL=qwen2.5:7b
+   QDRANT_URL=http://localhost:6333
+   ```
+
+2. **Frontend Configuration:**
+   Copy `apps/web/.env.example` to `apps/web/.env.local`:
+   ```bash
+   cp apps/web/.env.example apps/web/.env.local
+   ```
+   Ensure `LABELLENS_API_KEY` matches one of the values in `API_KEYS`:
+   ```ini
+   LABELLENS_API_URL=http://127.0.0.1:8000
+   LABELLENS_API_KEY=your_generated_api_key_here
+   ```
+
+### Step 5: Start Infrastructure Containers
+Launch PostgreSQL 16 and Qdrant:
 ```bash
 docker compose up -d
 ```
@@ -188,115 +282,281 @@ Verify container health:
 ```bash
 docker compose ps
 ```
-- PostgreSQL 16: `localhost:5432`
-- Qdrant Vector Store: `localhost:6333` (HTTP) / `localhost:6334` (gRPC)
+- PostgreSQL: `localhost:5432`
+- Qdrant Vector DB: `localhost:6333` (HTTP) / `localhost:6334` (gRPC)
 
-### 4. Run Ollama & LLM Smoke Test
-Make sure Ollama is running and has pulled the model:
+---
+
+## 7. Data Acquisition and Preparation
+
+LabelLens operates on structured data from [Open Food Facts](https://world.openfoodfacts.org). To populate the analytical store and vector collections, follow this reproducible sequence:
+
+### 1. Download Open Food Facts Data
+Place the Open Food Facts bulk Parquet export into `data/raw/food.parquet`. The data can be downloaded directly from the official Open Food Facts data repository or Hugging Face datasets:
 ```bash
-ollama run qwen2.5:7b
+# Ensure directory exists
+mkdir -p data/raw
+
+# Download monthly export (example using curl or wget)
+curl -L -o data/raw/food.parquet "https://openfoodfacts-data.s3.eu-west-3.amazonaws.com/data/openfoodfacts-products.parquet"
 ```
-Run the smoke test:
+
+### 2. Extract, Clean, and Validate
+Run the DuckDB in-place extraction and Pandera cleaning pipeline. This validates GS1 check digits, removes duplicate entries, normalizes text, and derives diet suitability flags without loading the entire raw file into memory:
 ```bash
-pytest -m smoke tests/test_smoke_llm.py
+uv run python -c "from labellens.data.pipeline import clean_and_normalize_dataset; clean_and_normalize_dataset()"
+```
+*Output: Generates validated `data/clean/products.parquet` and `docs/data_quality_report.md`.*
+
+### 3. Build DuckDB Analytical Store
+Build the fast local DuckDB index used by the API and agent graph for millisecond barcode lookups:
+```bash
+uv run python scripts/build_product_db.py
+```
+*Output: Generates `data/interim/products.duckdb` with unique index `idx_products_code`.*
+
+### 4. Initialize Qdrant Collections
+Initialize the Qdrant collections with dense, sparse, and CLIP vector configurations:
+```bash
+uv run python scripts/setup_qdrant.py
+```
+*Output: Creates `products` and `knowledge` collections in Qdrant.*
+
+### 5. Index Knowledge Cards (Additives & Diets)
+Chunk and index the authoritative additive explanations and diet definition cards from `docs/knowledge/`:
+```bash
+uv run python scripts/index_knowledge.py
 ```
 
-### 5. Start the FastAPI Backend Gateway
-In a terminal, start the asynchronous FastAPI backend server:
+### 6. Embed and Index Products
+Generate dense BGE embeddings and BM25 sparse vectors for all products in the clean dataset:
 ```bash
-uv run uvicorn labellens.api.app:create_app --factory --host 127.0.0.1 --port 8000 --reload
+uv run python scripts/index_products.py
 ```
-- Health check: `curl http://127.0.0.1:8000/health` (returns `{"status":"ok"}`)
-- Interactive API Docs: `http://127.0.0.1:8000/docs`
 
-### 6. Start the Next.js Frontend Web App
-In a new terminal, configure and launch the Next.js frontend:
+### 7. (Optional) Multimodal Packaging Images
+To enable packaging image search and CLIP vector indexing:
 ```bash
-cd apps/web
-# Copy frontend environment template
-cp .env.example .env.local
-# Run development server
-npm run dev
-```
-Open **[http://localhost:3000](http://localhost:3000)** in your browser to scan barcodes, upload food label photos, or search products.
+# 1. Download packaging image samples (front 400px images)
+uv run python scripts/download_images.py --limit 1000
 
-### 7. Run Quality & End-to-End Tests
-```bash
-# Backend unit & integration tests (23 tests)
-uv run pytest tests/test_api.py -q
+# 2. Compute OpenCLIP ViT-B/32 image embeddings
+uv run python scripts/embed_images.py
 
-# Full backend test suite
-pytest -m "not smoke"
-
-# Frontend Playwright E2E tests (Desktop & Mobile)
-cd apps/web
-npm run e2e
-
-# Frontend Typecheck & Lint
-npm run typecheck
-npm run lint
+# 3. Attach image vectors to Qdrant products collection
+uv run python scripts/attach_image_vectors.py
 ```
 
 ---
 
-## 5. Project Layout
+## 8. Running the Application
+
+To run the complete application, open **three terminal windows**:
+
+### Terminal 1: Supporting Services (Ollama & Infrastructure)
+1. Ensure Docker containers are running:
+   ```bash
+   docker compose up -d
+   ```
+2. Start Ollama and verify your model is pulled:
+   ```bash
+   ollama serve
+   # In another tab if model not yet downloaded:
+   ollama pull qwen2.5:7b
+   ```
+
+### Terminal 2: FastAPI Backend Gateway
+From the repository root:
+```powershell
+uv run uvicorn labellens.api.app:create_app --factory --host 127.0.0.1 --port 8000 --reload
+```
+- **Verify health:**
+  ```powershell
+  curl.exe http://127.0.0.1:8000/health
+  # Expected: {"status":"ok"}
+  ```
+- **Interactive OpenAPI Documentation:** Open `http://127.0.0.1:8000/docs` in your browser.
+
+### Terminal 3: Next.js Frontend Web Application
+Navigate to the web app directory and start the dev server:
+```powershell
+cd apps/web
+npm run dev
+```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+
+---
+
+## 9. Alternative Interfaces & Tools
+
+### FastMCP Server (Claude Desktop & External Agents)
+LabelLens exposes an MCP server implementing 10 tools, 2 resources, and 2 prompt templates:
+
+- **Launch MCP Server over stdio:**
+  ```bash
+  uv run python -m labellens.mcp_server
+  ```
+- **Claude Desktop Configuration (`claude_desktop_config.json`):**
+  ```json
+  {
+    "mcpServers": {
+      "labellens": {
+        "command": "uv",
+        "args": [
+          "--directory",
+          "/path/to/nutrition-and-food-label-analyzer",
+          "run",
+          "python",
+          "-m",
+          "labellens.mcp_server"
+        ]
+      }
+    }
+  }
+  ```
+*(For complete tool schemas, rate limits, and resource URIs, consult [`docs/mcp.md`](docs/mcp.md).)*
+
+### Standalone CLI Agent
+To test the LangGraph state machine directly from your command line:
+```bash
+uv run python scripts/run_agent.py "Check barcode 3017620422003 for vegan diet and milk allergy"
+```
+
+---
+
+## 10. Testing and Quality Assurance
+
+LabelLens enforces strict code formatting, typing, and deterministic test coverage across both backend and frontend layers:
+
+```bash
+# 1. Backend Linting & Formatting Check (Ruff)
+uv run ruff check .
+uv run ruff format --check .
+
+# 2. Backend Strict Static Type Check (Mypy)
+uv run mypy packages
+
+# 3. Backend Unit & Integration Tests (23 API tests + 71 Core tests)
+uv run pytest tests/test_api.py -q
+uv run pytest -m "not smoke"
+
+# 4. Frontend Type Checking (TypeScript)
+cd apps/web
+npm run typecheck
+
+# 5. Frontend Linting (ESLint)
+npm run lint
+
+# 6. Playwright End-to-End Suite (12 tests across Desktop & Mobile)
+npm run e2e
+```
+
+---
+
+## 11. Project Layout
 
 ```text
 nutrition-and-food-label-analyzer/
 ├── apps/
-│   ├── api/            # FastAPI gateway
-│   ├── mcp_server/     # FastMCP server launchers (stdio & HTTP)
-│   └── web/            # Next.js frontend
-├── packages/labellens/ # Shared Python package
-│   ├── config.py       # Pydantic Settings configuration
-│   ├── data/           # Extraction, cleaning, DuckDB loader
-│   ├── embeddings/     # Text (BGE), Image (CLIP), Sparse (BM25)
-│   ├── retrieval/      # Qdrant hybrid retrieval & filters
-│   ├── agents/         # LangGraph state machine & analyst nodes
-│   ├── mcp_server/     # FastMCP server definition, tools, resources, prompts
-│   ├── mcp_client/     # Adapter toolbox for LangGraph & remote agents
-│   ├── db/             # SQLAlchemy 2 models & Alembic migrations
-│   └── llm/            # OpenAI-compatible provider abstraction
-├── data/               # Gitignored data storage: raw/ interim/ clean/ images/
-├── notebooks/          # Exploratory data analysis & experiments
-├── evals/              # Golden eval sets and metric scripts
-├── infra/              # Dockerfiles, CI workflows, deployment manifests
-├── docs/               # Data dictionary, design docs, mcp.md
-├── tests/              # Unit, integration, and MCP test suites
-├── pyproject.toml      # Build and dependency definition (uv)
-├── docker-compose.yml  # Local Postgres & Qdrant infrastructure
-├── .env.example        # Environment variable template
-└── README.md
+│   ├── api/                    # API gateway configurations
+│   ├── mcp_server/             # MCP server launchers (stdio & HTTP)
+│   └── web/                    # Next.js 16 Web Application (App Router)
+│       ├── e2e/                # Playwright end-to-end test suite (app.spec.ts)
+│       ├── src/app/            # Routes: Home (/), Check (/check), Profile (/profile)
+│       ├── src/app/api/        # Next.js server proxy route handler ([...path]/route.ts)
+│       ├── src/components/     # UI components (Scanner, Tables, Badges, Banners)
+│       ├── src/hooks/          # React hooks (useAnalysis, useHydrated)
+│       └── src/lib/            # Core frontend libraries (API client, SSE, profile store)
+├── packages/labellens/         # Core shared Python library
+│   ├── agents/                 # LangGraph state machine, nodes, router, critic, rules
+│   ├── api/                    # FastAPI app factory, routes, schemas, rate limiter
+│   ├── data/                   # Data extraction, Pandera schemas, cleaning pipeline
+│   ├── db/                     # PostgreSQL SQLAlchemy 2 models & Alembic migrations
+│   ├── embeddings/             # BGE text, FastEmbed BM25 sparse, OpenCLIP image models
+│   ├── llm/                    # OpenAI-compatible LLM client abstraction
+│   ├── mcp_server/             # FastMCP server definition, tool handlers, resources
+│   └── retrieval/              # Qdrant client setup, hybrid search, cross-encoder reranking
+├── data/                       # Gitignored data storage (raw, interim, clean, images)
+├── docs/                       # Architecture specs, OpenAPI export, knowledge cards
+│   ├── knowledge/              # Additives and diet definition YAML cards
+│   ├── openapi.json            # Contract-first exported OpenAPI 3.1 specification
+│   └── mcp.md                  # Comprehensive MCP tool & security documentation
+├── scripts/                    # Verified indexing, database build, and eval scripts
+├── tests/                      # Pytest test suites (API, Agents, MCP, Retrieval, Rules)
+├── docker-compose.yml          # PostgreSQL 16 & Qdrant local services
+├── pyproject.toml              # Project dependencies, build tool (uv/hatchling), and linters
+└── README.md                   # Primary project documentation
 ```
 
 ---
 
-## 6. Data & Attribution
+## 12. Configuration Reference
 
-- **Source:** Open Food Facts (`openfoodfacts/product-database`)
-- **License:** Open Database License (ODbL) for product data; CC BY-SA for packaging images.
-- **Attribution:** Data sourced with appreciation from the global Open Food Facts community.
+The following environment variables can be set in `.env` (backend) or `apps/web/.env.local` (frontend):
+
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `APP_ENV` | Backend | string | `development` | Environment mode (`development`, `staging`, `production`, `test`). |
+| `LOG_LEVEL` | Backend | string | `INFO` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
+| `API_KEYS` | Backend | string | *(None)* | Comma-separated list of valid secret API keys for gateway authentication. |
+| `LABELLENS_API_URL` | Frontend | string | `http://127.0.0.1:8000` | Upstream FastAPI backend URL reached by Next.js server proxy. |
+| `LABELLENS_API_KEY` | Frontend | string | *(None)* | Secret API key forwarded by the server proxy to the backend. |
+| `LLM_BASE_URL` | Backend | string | `http://localhost:11434/v1` | OpenAI-compatible endpoint (Ollama or cloud provider). |
+| `LLM_MODEL` | Backend | string | `qwen2.5:7b` | Model identifier used for reasoning, synthesis, and repair. |
+| `LLM_API_KEY` | Backend | string | `ollama` | API key for the LLM endpoint (`ollama` for local runner). |
+| `QDRANT_URL` | Backend | string | `http://localhost:6333` | HTTP endpoint for the Qdrant vector database. |
+| `TEXT_EMBEDDING_MODEL`| Backend | string | `BAAI/bge-small-en-v1.5` | Dense text embedding model for search and knowledge retrieval. |
+| `SPARSE_EMBEDDING_MODEL`| Backend | string | `Qdrant/bm25` | Sparse lexical model used for FastEmbed BM25 indexing. |
+| `IMAGE_EMBEDDING_MODEL`| Backend | string | `ViT-B-32` | OpenCLIP architecture for multimodal packaging image search. |
+| `RERANKER_MODEL` | Backend | string | `BAAI/bge-reranker-base` | Cross-encoder model used for second-stage reciprocal reranking. |
+| `CORS_ORIGINS` | Backend | string | `http://localhost:3000` | Allowed CORS origins for browser access. |
+| `API_RATE_LIMIT_PER_MINUTE` | Backend | int | `60` | Sliding-window requests allowed per minute per client key/IP. |
+| `API_MAX_CONCURRENT_RUNS` | Backend | int | `2` | Maximum concurrent LangGraph agent executions allowed. |
 
 ---
 
-## 7. Disclaimer
+## 13. Troubleshooting
 
-LabelLens is an educational and informational tool. **It does not provide medical or clinical nutritional advice.** Always consult healthcare professionals for acute dietary and severe allergic conditions.
+### 1. `Bind for 0.0.0.0:6333 failed: port is already allocated`
+- **Cause:** Qdrant is already running in a container or local process occupying port 6333.
+- **Solution:** Verify Qdrant status using `curl.exe http://127.0.0.1:6333/readyz`. If it responds `"all shards are ready"`, Qdrant is ready to use and does not need to be restarted.
+
+### 2. `curl : Unable to connect to the remote server` (PowerShell)
+- **Cause:** In standard Windows PowerShell, `curl` is an alias for the `Invoke-WebRequest` cmdlet. Additionally, FastAPI requires ~15–20 seconds on initial startup to load PyTorch and sentence-transformer models into RAM.
+- **Solution:** Wait for model warmup to complete, and use `curl.exe` with the explicit file extension or `Invoke-RestMethod`:
+  ```powershell
+  curl.exe http://127.0.0.1:8000/health
+  # or
+  Invoke-RestMethod http://127.0.0.1:8000/health
+  ```
+
+### 3. Next.js UI Displays 502 "Upstream Unreachable"
+- **Cause:** The Next.js proxy route handler (`/api/[...path]`) cannot connect to the FastAPI backend at `LABELLENS_API_URL`.
+- **Solution:** Ensure the FastAPI server is running on `127.0.0.1:8000` (`uv run uvicorn ...`) and verify that `apps/web/.env.local` contains `LABELLENS_API_URL=http://127.0.0.1:8000`.
+
+### 4. Camera Barcode Scanner Fails to Start
+- **Cause:** Web browsers restrict `navigator.mediaDevices.getUserMedia` to secure contexts (`https://` or `http://localhost`). Accessing the development server from a local LAN IP (e.g. `192.168.x.x`) blocks camera access.
+- **Solution:** Use `http://localhost:3000` on the host machine. To test on a physical mobile device, establish a secure tunnel (e.g., using Cloudflare Tunnel: `cloudflared tunnel --url http://localhost:3000`). If camera access is denied, use the built-in manual barcode number input or photo upload tab.
+
+### 5. `401 Unauthorized` on API Calls
+- **Cause:** The request header `X-API-Key` is missing or does not match any key configured in `API_KEYS`.
+- **Solution:** Add matching keys to both `.env` (`API_KEYS=your_key`) and `apps/web/.env.local` (`LABELLENS_API_KEY=your_key`), then restart both Uvicorn and Next.js dev servers.
 
 ---
 
-## 8. Author & Contact
+## 14. Data Attribution & Disclaimer
 
-**Abdullah Rafi**
+- **Data Source:** Product information, ingredient lists, Nutri-Score, and packaging images are sourced from the global community at [Open Food Facts](https://world.openfoodfacts.org/).
+- **Data License:** Open Food Facts database contents are provided under the [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1-0/). Individual product packaging photos are provided under Creative Commons Attribution-ShareAlike (CC BY-SA).
+- **Medical Disclaimer:** **LabelLens provides general informational summaries and is not a medical device, clinical diagnostic tool, or substitute for professional dietary advice.** Ingredient formulations and manufacturing processes change without notice. Individuals with acute allergies or severe medical conditions must always inspect the physical product packaging and consult certified healthcare professionals.
 
-- 📧 **Email:** [abdullahrafi@outlook.com](mailto:abdullahrafi@outlook.com)
+---
+
+## 15. Author & License
+
+**Author:** [Abdullah Rafi](https://github.com/iar01)
 - 💼 **LinkedIn:** [linkedin.com/in/abdullahrafi1](https://www.linkedin.com/in/abdullahrafi1/)
 - 🌐 **Linktree:** [linktr.ee/iamaronee](https://linktr.ee/iamaronee)
 - 🐙 **GitHub:** [@iar01](https://github.com/iar01)
 
----
-
-## 9. License
-
-Code is licensed under the [MIT License](LICENSE).
-
+This project is licensed under the [MIT License](LICENSE).
