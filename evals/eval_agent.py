@@ -221,7 +221,7 @@ def run_agent_evaluation(
         query = sc["query"]
         profile = sc.get("profile", {"allergens": [], "diets": [], "goals": []})
         is_medical = sc.get("is_medical_query", False)
-        if hasattr(llm, "is_medical"):
+        if isinstance(llm, ScenarioLLM):
             llm.is_medical = is_medical
 
         try:
