@@ -1,7 +1,7 @@
 import sqlite3
 import threading
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from functools import cache, lru_cache
 from pathlib import Path
@@ -14,6 +14,7 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from labellens.agents.deps import Deps, build_default_deps
 from labellens.agents.graph import build_graph
 from labellens.api.errors import ApiError
+from labellens.cache import AnalysisCache, SemanticCache
 from labellens.config import settings
 from labellens.embeddings.image import ClipImageEmbedder
 
@@ -70,6 +71,8 @@ class Services:
     get_product: Callable[[str], dict[str, Any] | None]
     get_clip: Callable[[], Any] | None
     checks: list[ReadyCheck]
+    analysis_cache: AnalysisCache = field(default_factory=AnalysisCache)
+    semantic_cache: SemanticCache = field(default_factory=SemanticCache)
 
 
 def build_services() -> Services:
@@ -99,6 +102,8 @@ def build_services() -> Services:
         get_product=lru_cache(maxsize=4096)(deps.repo.get),
         get_clip=cache(ClipImageEmbedder),
         checks=checks,
+        analysis_cache=AnalysisCache(),
+        semantic_cache=SemanticCache(),
     )
 
 

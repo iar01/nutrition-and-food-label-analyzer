@@ -56,9 +56,15 @@ class FakeRepo:
         return True
 
 
+class FakeTextEmb:
+    def embed_query(self, text: str) -> np.ndarray:
+        return np.ones(384, dtype=np.float32)
+
+
 class FakeSearcher:
-    def __init__(self, n_candidates: int = 1) -> None:
+    def __init__(self, n_candidates: int = 1, text_emb: Any = None) -> None:
         self.n = n_candidates
+        self.text_emb = text_emb or FakeTextEmb()
 
     def products(self, query: str, limit: int = 5, filters: Any = None) -> list[dict[str, Any]]:
         return [dict(HIT) for _ in range(self.n)]

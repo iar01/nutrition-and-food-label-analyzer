@@ -1,4 +1,5 @@
 import logging
+import re
 import uuid
 from collections.abc import AsyncIterator
 from typing import Annotated, Any
@@ -12,7 +13,13 @@ from starlette.concurrency import iterate_in_threadpool, run_in_threadpool
 from labellens.api.config import ApiConfig
 from labellens.api.errors import ApiError
 from labellens.api.logging_setup import request_id_var
-from labellens.api.runner import chat_events, initial_state, to_analysis
+from labellens.api.runner import (
+    cached_chat_events,
+    chat_events,
+    initial_state,
+    semantic_cached_chat_events,
+    to_analysis,
+)
 from labellens.api.schemas import (
     AnalysisOut,
     AnalyzeResponse,
@@ -90,6 +97,15 @@ async def analyze(
 
     candidates: list[CandidateOut] = []
     if barcode:
+        cached = services.analysis_cache.get(barcode, prof.model_dump())
+        if cached is not None:
+            return AnalyzeResponse(
+                **cached.model_dump(),
+                matched_by="barcode",
+                candidates=[],
+                thread_id=str(uuid.uuid4()),
+                request_id=request_id_var.get(),
+            )
         matched_by = "barcode"
         user_text = f"check {barcode}"
     elif image is not None:
@@ -115,6 +131,9 @@ async def analyze(
         )
 
     analysis = to_analysis(values)
+    if values.get("product", {}).get("code"):
+        services.analysis_cache.set(values["product"]["code"], prof.model_dump(), analysis)
+
     return AnalyzeResponse(
         **analysis.model_dump(),
         matched_by=matched_by,  # type: ignore[arg-type]
@@ -142,6 +161,47 @@ async def chat(
     services: Annotated[Services, Depends(get_services)],
 ) -> StreamingResponse:
     """Run the agent and stream progress as Server-Sent Events."""
+    # Fast path: check instant cache for barcode queries in chat
+    if body.message is not None:
+        barcode_match = re.search(r"\b\d{8,14}\b", body.message)
+        if barcode_match:
+            barcode = barcode_match.group(0)
+            cached = services.analysis_cache.get(barcode, body.profile.model_dump())
+            if cached is not None:
+                thread_id = str(uuid.uuid4())
+
+                async def cached_stream() -> AsyncIterator[str]:
+                    for part in cached_chat_events(thread_id, cached):
+                        yield part
+
+                return StreamingResponse(
+                    cached_stream(),
+                    media_type="text/event-stream",
+                    headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+                )
+
+            # Fast path: Tier 2 Semantic Cache
+            embedder = getattr(getattr(services.deps, "searcher", None), "text_emb", None)
+            if embedder is not None:
+                sem_hit = services.semantic_cache.get(
+                    query=body.message,
+                    product_code=barcode,
+                    profile=body.profile.model_dump(),
+                    embedder=embedder,
+                )
+                if sem_hit is not None:
+                    thread_id = str(uuid.uuid4())
+
+                    async def sem_stream() -> AsyncIterator[str]:
+                        for part in semantic_cached_chat_events(thread_id, sem_hit):
+                            yield part
+
+                    return StreamingResponse(
+                        sem_stream(),
+                        media_type="text/event-stream",
+                        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+                    )
+
     graph = services.graph
     inputs: Any
     if body.message is not None:
@@ -159,9 +219,21 @@ async def chat(
     slots: RunSlots = request.app.state.run_slots
     await slots.acquire()  # raises 503 if every slot is busy
 
+    embedder = getattr(getattr(services.deps, "searcher", None), "text_emb", None)
+
     async def stream() -> AsyncIterator[str]:
         try:
-            async for part in iterate_in_threadpool(chat_events(graph, inputs, config, thread_id)):
+            async for part in iterate_in_threadpool(
+                chat_events(
+                    graph,
+                    inputs,
+                    config,
+                    thread_id,
+                    cache=services.analysis_cache,
+                    semantic_cache=services.semantic_cache,
+                    embedder=embedder,
+                )
+            ):
                 yield part
         finally:
             slots.release()  # also runs if the client disconnects

@@ -65,7 +65,11 @@ def ingredient_analyst(state: AgentState, deps: Deps) -> dict[str, Any]:
     }
     try:
         result = structured_call(
-            deps.llm, IngredientFindings, INGREDIENT_SYSTEM, json.dumps(payload)
+            deps.llm,
+            IngredientFindings,
+            INGREDIENT_SYSTEM,
+            json.dumps(payload),
+            cache=getattr(deps, "prompt_cache", None),
         )
         for note in result.notable:
             note.evidence_ids = [i for i in note.evidence_ids if i in allowed]  # drop invented ids
@@ -94,7 +98,13 @@ def additive_analyst(state: AgentState, deps: Deps) -> dict[str, Any]:
         "cards": [{"id": e["id"], "title": e["title"], "text": e["text"]} for e in evidence],
     }
     try:
-        result = structured_call(deps.llm, AdditiveFindings, ADDITIVE_SYSTEM, json.dumps(payload))
+        result = structured_call(
+            deps.llm,
+            AdditiveFindings,
+            ADDITIVE_SYSTEM,
+            json.dumps(payload),
+            cache=getattr(deps, "prompt_cache", None),
+        )
         notes = [
             n.model_dump() for n in result.notes if n.evidence_id in {e["id"] for e in evidence}
         ]

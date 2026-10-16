@@ -24,8 +24,13 @@ def extract_json(raw: str) -> str:
 
 
 def structured_call[T: BaseModel](
-    llm: Any, schema: type[T], system: str, user: str, retries: int = 1
+    llm: Any, schema: type[T], system: str, user: str, retries: int = 1, cache: Any = None
 ) -> T:
+    if cache is not None:
+        cached_json = cache.get(system, user, schema.__name__)
+        if cached_json is not None:
+            return schema.model_validate_json(cached_json)
+
     schema_text = json.dumps(schema.model_json_schema())
     if "qwen3" in settings.llm_model.lower():
         user = user + "\n/no_think"  # Qwen3: skip the long thinking phase
@@ -50,7 +55,11 @@ def structured_call[T: BaseModel](
             )
         raw = str(llm.invoke(messages).content)
         try:
-            return schema.model_validate_json(extract_json(raw))
+            extracted = extract_json(raw)
+            result = schema.model_validate_json(extracted)
+            if cache is not None:
+                cache.set(system, user, extracted, schema.__name__)
+            return result
         except (ValidationError, ValueError) as exc:
             last_error = str(exc).replace("\n", " ")[:300]
     raise LLMFormatError(last_error)

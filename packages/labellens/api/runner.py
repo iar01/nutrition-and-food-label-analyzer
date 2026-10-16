@@ -14,6 +14,7 @@ from labellens.api.schemas import (
     ProductSummary,
     Verdicts,
 )
+from labellens.cache import SemanticHit
 
 logger = logging.getLogger("labellens.api")
 
@@ -98,7 +99,43 @@ def sse(event: str, data: dict[str, Any]) -> str:
     return f"event: {event}\ndata: {json.dumps(data, default=str)}\n\n"
 
 
-def chat_events(graph: Any, inputs: Any, config: dict[str, Any], thread_id: str) -> Iterator[str]:
+def cached_chat_events(thread_id: str, analysis: AnalysisOut) -> Iterator[str]:
+    """Emit Server-Sent Events from a cached AnalysisOut instantly."""
+    yield sse("step", {"node": "cache", "label": "Retrieved from instant cache"})
+    for part in analysis.answer_markdown.split("\n\n"):
+        yield sse("answer_chunk", {"text": part + "\n\n"})
+    yield sse("final", {"thread_id": thread_id, **analysis.model_dump()})
+    yield sse("done", {"thread_id": thread_id, "status": "complete"})
+
+
+def semantic_cached_chat_events(thread_id: str, hit: SemanticHit) -> Iterator[str]:
+    """Emit Server-Sent Events from a semantic cache hit."""
+    percent = int(round(hit.similarity * 100))
+    yield sse(
+        "step",
+        {
+            "node": "semantic_cache",
+            "label": f"Retrieved from semantic cache ({percent}% match with '{hit.matched_query}')",
+        },
+    )
+    for part in hit.answer.split("\n\n"):
+        yield sse("answer_chunk", {"text": part + "\n\n"})
+    if hit.analysis:
+        yield sse("final", {"thread_id": thread_id, **hit.analysis})
+    else:
+        yield sse("final", {"thread_id": thread_id, "answer_markdown": hit.answer})
+    yield sse("done", {"thread_id": thread_id, "status": "complete"})
+
+
+def chat_events(
+    graph: Any,
+    inputs: Any,
+    config: dict[str, Any],
+    thread_id: str,
+    cache: Any = None,
+    semantic_cache: Any = None,
+    embedder: Any = None,
+) -> Iterator[str]:
     """Run the graph and yield SSE strings. This is a plain (blocking) generator."""
     try:
         for chunk in graph.stream(inputs, config, stream_mode="updates"):
@@ -130,6 +167,34 @@ def chat_events(graph: Any, inputs: Any, config: dict[str, Any], thread_id: str)
             return
 
         analysis = to_analysis(values)
+        product_code = values.get("product", {}).get("code")
+        profile = values.get("profile") or (
+            inputs.get("profile") if isinstance(inputs, dict) else None
+        )
+
+        if cache is not None and product_code:
+            cache.set(product_code, profile, analysis)
+
+        if semantic_cache is not None and product_code and embedder is not None:
+            user_text = inputs.get("user_text", "") if isinstance(inputs, dict) else ""
+            if user_text:
+                try:
+                    if hasattr(embedder, "embed_query"):
+                        raw_vec = embedder.embed_query(user_text)
+                    else:
+                        raw_vec = embedder.embed_text([user_text])[0]
+                    vec = raw_vec.tolist() if hasattr(raw_vec, "tolist") else list(raw_vec)
+                    semantic_cache.set(
+                        query=user_text,
+                        product_code=product_code,
+                        profile=profile,
+                        answer=analysis.answer_markdown,
+                        vector=vec,
+                        metadata={"analysis": analysis.model_dump()},
+                    )
+                except Exception:
+                    logger.debug("Failed to set semantic cache entry", exc_info=True)
+
         # The answer is assembled by code, so we stream it paragraph by paragraph.
         for part in analysis.answer_markdown.split("\n\n"):
             yield sse("answer_chunk", {"text": part + "\n\n"})
