@@ -20,21 +20,25 @@ export function ChooseProduct({
   const unique = candidates.filter((c, i) => candidates.findIndex((o) => o.code === c.code) === i);
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{question}</DialogTitle>
-          <DialogDescription>Pick the one that matches the pack in your hand.</DialogDescription>
+          <DialogTitle className="text-xl font-bold tracking-tight text-foreground">{question}</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Multiple potential matches were discovered. Select the exact product matching your pack.
+          </DialogDescription>
         </DialogHeader>
-        <ul className="space-y-2">
+        <ul className="mt-2 space-y-2 max-h-[60vh] overflow-y-auto pr-1">
           {unique.map((c) => (
             <li key={c.code}>
               <button
                 type="button"
-                className="w-full rounded-md border p-3 text-left hover:bg-muted focus-visible:outline focus-visible:outline-2"
+                className="group flex w-full flex-col gap-1 rounded-xl border border-border/80 bg-card p-3.5 text-left transition-all hover:border-primary/50 hover:bg-secondary/40 hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 onClick={() => c.code && onChoose(c.code)}
               >
-                <span className="block font-medium">{c.name ?? c.code}</span>
-                <span className="block text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm sm:text-base">
+                  {c.name ?? c.code}
+                </span>
+                <span className="text-xs text-muted-foreground">
                   {[c.brands, c.code].filter(Boolean).join(' · ')}
                 </span>
               </button>

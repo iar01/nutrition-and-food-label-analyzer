@@ -54,34 +54,92 @@ export function PhotoUpload() {
     }
   }
 
+  const [dragActive, setDragActive] = useState(false);
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) void onFile(file);
+  }
+
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        Photograph the front of the pack. We find the closest product, which you can confirm on the next screen. The
-        photo is shrunk on your device and is not stored.
-      </p>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="sr-only"
-        aria-label="Take or choose a photo of the product"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = ''; // allow choosing the same file again
-          if (file) void onFile(file);
+    <div className="space-y-5">
+      {/* Interactive Drop & Capture Zone */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragActive(true);
         }}
-      />
-      <Button onClick={() => inputRef.current?.click()} disabled={busy}>
-        <Camera aria-hidden className="size-4" />
-        {busy ? 'Analysing…' : 'Take or choose a photo'}
-      </Button>
+        onDragLeave={() => setDragActive(false)}
+        onDrop={handleDrop}
+        onClick={() => !busy && inputRef.current?.click()}
+        className={`group relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-all cursor-pointer ${
+          dragActive
+            ? 'border-primary bg-primary/5 shadow-inner'
+            : 'border-border/80 bg-secondary/30 hover:border-primary/50 hover:bg-secondary/60'
+        }`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="sr-only"
+          aria-label="Take or choose a photo of the product"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = ''; // allow choosing the same file again
+            if (file) void onFile(file);
+          }}
+        />
+
+        <div className="flex size-14 items-center justify-center rounded-2xl bg-card text-primary shadow-xs ring-1 ring-border/80 transition-transform group-hover:scale-105">
+          <Camera aria-hidden className="size-7" />
+        </div>
+
+        <div className="mt-4 space-y-1">
+          <p className="text-base font-semibold text-foreground">
+            Photograph the packaging front
+          </p>
+          <p className="max-w-md text-xs text-muted-foreground">
+            Snap the front label or drag & drop a photo here. We will match the closest product.
+          </p>
+        </div>
+
+        <div className="mt-5">
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              inputRef.current?.click();
+            }}
+            disabled={busy}
+            className="font-semibold shadow-xs"
+          >
+            <Camera aria-hidden className="size-4" />
+            {busy ? 'Analysing…' : 'Take or choose a photo'}
+          </Button>
+        </div>
+      </div>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Photos are compressed locally on your device and are not stored.
+      </p>
+
       {preview ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt="Your photo" className="max-h-48 rounded-md border" />
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-border/80 bg-card p-4">
+          <p className="text-xs font-medium text-muted-foreground">Captured image preview:</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={preview} alt="Your photo" className="max-h-52 rounded-lg border border-border/80 object-contain shadow-xs" />
+        </div>
       ) : null}
-      {busy ? <Spinner label="Analysing your photo…" /> : null}
+
+      {busy ? (
+        <div className="flex justify-center p-4">
+          <Spinner label="Analysing your photo…" />
+        </div>
+      ) : null}
       {slow ? <SlowNotice /> : null}
       {error ? <ErrorPanel error={error} /> : null}
     </div>

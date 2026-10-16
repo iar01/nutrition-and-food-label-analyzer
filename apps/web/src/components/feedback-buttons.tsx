@@ -31,17 +31,41 @@ export function FeedbackButtons({
     }
   }
 
-  if (state === 'sent') return <p role="status" className="text-sm">Thanks, your feedback helps us improve.</p>;
+  if (state === 'sent') {
+    return (
+      <div role="status" className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+        Thanks, your feedback helps us improve.
+      </div>
+    );
+  }
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm">Was this helpful?</span>
-      <Button variant="outline" size="sm" disabled={state === 'sending'} onClick={() => send('up')}>
-        <ThumbsUp aria-hidden className="size-4" /> Yes
-      </Button>
-      <Button variant="outline" size="sm" disabled={state === 'sending'} onClick={() => send('down')}>
-        <ThumbsDown aria-hidden className="size-4" /> No
-      </Button>
-      {state === 'failed' ? <span role="alert" className="text-sm text-red-700">Could not send. Try again.</span> : null}
+    <div className="flex flex-wrap items-center gap-2.5">
+      <span className="text-xs font-medium text-muted-foreground">Was this analysis accurate?</span>
+      <div className="inline-flex items-center gap-1.5">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={state === 'sending'}
+          onClick={() => send('up')}
+          className="h-8 rounded-lg px-2.5 text-xs font-medium hover:border-emerald-500/50 hover:bg-emerald-50 hover:text-emerald-800 transition-colors"
+        >
+          <ThumbsUp aria-hidden className="size-3.5" /> Yes
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={state === 'sending'}
+          onClick={() => send('down')}
+          className="h-8 rounded-lg px-2.5 text-xs font-medium hover:border-red-500/50 hover:bg-red-50 hover:text-red-800 transition-colors"
+        >
+          <ThumbsDown aria-hidden className="size-3.5" /> No
+        </Button>
+      </div>
+      {state === 'failed' ? (
+        <span role="alert" className="text-xs font-medium text-red-600">
+          Could not send. Try again.
+        </span>
+      ) : null}
     </div>
   );
 }

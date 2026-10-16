@@ -19,20 +19,19 @@ function ProductImage({ code }: { code: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
-      <div className="flex size-24 shrink-0 items-center justify-center rounded-md border border-dashed text-xs text-muted-foreground">
+      <div className="flex size-24 sm:size-28 shrink-0 items-center justify-center rounded-xl border border-dashed border-border/80 bg-secondary/50 text-xs font-medium text-muted-foreground">
         No photo
       </div>
     );
   }
   return (
-    // A plain <img>: the picture comes from our own API, so Next's image optimiser adds nothing here.
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={`/api/v1/products/${code}/image`}
       alt=""
-      width={96}
-      height={96}
-      className="size-24 shrink-0 rounded-md border object-contain"
+      width={112}
+      height={112}
+      className="size-24 sm:size-28 shrink-0 rounded-xl border border-border/80 bg-white object-contain p-1 shadow-2xs"
       onError={() => setFailed(true)}
     />
   );
@@ -54,28 +53,38 @@ export function AnalysisView({ result, requestId }: { result: AnalysisResult; re
   }
 
   return (
-    <article className="space-y-8">
-      <header className="flex gap-4">
+    <article className="space-y-6">
+      {/* Product Hero Card */}
+      <header className="flex flex-col gap-5 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:flex-row sm:items-start sm:p-6">
         <ProductImage code={product.code} />
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold leading-tight">{product.name ?? 'Unnamed product'}</h1>
-          <p className="text-muted-foreground">
-            {[product.brand, product.quantity].filter(Boolean).join(' · ') || 'Brand unknown'}
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1 space-y-2.5">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl leading-snug">
+              {product.name ?? 'Unnamed product'}
+            </h1>
+            <p className="text-sm font-medium text-muted-foreground">
+              {[product.brand, product.quantity].filter(Boolean).join(' · ') || 'Brand unknown'}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <NutriScoreBadge grade={product.nutriscore} />
             <NovaBadge group={product.nova_group} />
+            {product.code ? (
+              <span className="inline-flex items-center rounded-lg border border-border/80 bg-secondary/50 px-2.5 py-1 font-mono text-xs text-muted-foreground">
+                {product.code}
+              </span>
+            ) : null}
           </div>
         </div>
       </header>
 
       {result.matched_by === 'image' && (result.candidates?.length ?? 0) > 1 ? (
-        <section aria-label="Other possible matches" className="rounded-md border p-3 text-sm">
-          <p className="font-medium">Matched from your photo. Not the right product?</p>
+        <section aria-label="Other possible matches" className="rounded-xl border border-border/80 bg-secondary/30 p-4 text-sm">
+          <p className="font-semibold text-foreground">Matched from your photo. Not the right product?</p>
           <ul className="mt-2 space-y-1">
             {result.candidates!.slice(1).map((c) => (
               <li key={c.code}>
-                <Link className="underline" href={`/check?barcode=${c.code}`}>
+                <Link className="font-medium text-primary underline underline-offset-2 hover:opacity-80" href={`/check?barcode=${c.code}`}>
                   {c.name ?? c.code}
                   {c.brands ? ` (${c.brands})` : ''}
                 </Link>
@@ -85,85 +94,133 @@ export function AnalysisView({ result, requestId }: { result: AnalysisResult; re
         </section>
       ) : null}
 
+      {/* Safety Verdict Shield */}
       <OverallBanner overall={verdicts.overall} />
 
+      {/* Executive Summary */}
       {result.summary ? (
-        <section aria-label="Summary">
-          <p>{result.summary}</p>
+        <section aria-label="Summary" className="rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:p-6">
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Analysis Summary</h2>
+          <p className="text-base leading-relaxed text-foreground">{result.summary}</p>
           {(result.tips?.length ?? 0) > 0 ? (
-            <ul className="mt-2 list-disc pl-5 text-sm">
+            <ul className="mt-3 space-y-1.5 border-t border-border/60 pt-3 text-sm text-muted-foreground">
               {result.tips?.map((tip) => (
-                <li key={tip}>{tip}</li>
+                <li key={tip} className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span>{tip}</span>
+                </li>
               ))}
             </ul>
           ) : null}
         </section>
       ) : null}
 
+      {/* Profile Breakdown */}
       {checks.length > 0 ? (
         <section aria-labelledby="profile-h" className="space-y-3">
-          <h2 id="profile-h" className="text-xl font-semibold">Your profile</h2>
-          <ul className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 id="profile-h" className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+              Your profile
+            </h2>
+            <Link href="/profile" className="text-xs font-semibold text-primary underline underline-offset-2">
+              Edit rules
+            </Link>
+          </div>
+          <ul className="space-y-2.5">
             {checks.map(({ kind, id, item }) => (
-              <li key={`${kind}-${id}`} className="rounded-md border p-3">
+              <li key={`${kind}-${id}`} className="rounded-xl border border-border/80 bg-card p-4 shadow-2xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium capitalize">
+                  <span className="text-sm font-semibold capitalize text-foreground">
                     {kind}: {id.replace(/_/g, ' ')}
                   </span>
                   <VerdictChip status={item.status} />
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">{item.reasons?.join(' ') ?? ''}</p>
+                {item.reasons && item.reasons.length > 0 ? (
+                  <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                    {item.reasons.join(' ')}
+                  </p>
+                ) : null}
               </li>
             ))}
           </ul>
         </section>
       ) : null}
 
-      <section aria-labelledby="nutrition-h" className="space-y-2">
-        <h2 id="nutrition-h" className="text-xl font-semibold">Nutrition</h2>
+      {/* Nutrition Breakdown */}
+      <section aria-labelledby="nutrition-h" className="space-y-3">
+        <h2 id="nutrition-h" className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+          Nutrition
+        </h2>
         <NutritionTable product={product} verdicts={verdicts} />
       </section>
 
-      <section aria-labelledby="ingredients-h" className="space-y-2">
-        <h2 id="ingredients-h" className="text-xl font-semibold">Ingredients</h2>
-        {product.ingredients ? (
-          <IngredientText text={product.ingredients} />
-        ) : (
-          <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-            The ingredient list is missing in the data. Check the pack.
-          </p>
-        )}
-        {result.ingredients?.summary ? <p className="text-sm text-muted-foreground">{result.ingredients.summary}</p> : null}
+      {/* Ingredients */}
+      <section aria-labelledby="ingredients-h" className="space-y-3">
+        <h2 id="ingredients-h" className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+          Ingredients
+        </h2>
+        <div className="rounded-xl border border-border/80 bg-card p-4 sm:p-5 shadow-2xs">
+          {product.ingredients ? (
+            <IngredientText text={product.ingredients} />
+          ) : (
+            <p className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">
+              The ingredient list is missing in the data. Check the physical pack.
+            </p>
+          )}
+          {result.ingredients?.summary ? (
+            <p className="mt-3 border-t border-border/60 pt-3 text-xs text-muted-foreground leading-relaxed">
+              {result.ingredients.summary}
+            </p>
+          ) : null}
+        </div>
       </section>
 
+      {/* Additives */}
       {result.additives ? (
-        <section aria-labelledby="additives-h" className="space-y-2">
-          <h2 id="additives-h" className="text-xl font-semibold">Additives</h2>
+        <section aria-labelledby="additives-h" className="space-y-3">
+          <h2 id="additives-h" className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+            Additives
+          </h2>
           <AdditiveList additives={result.additives} />
         </section>
       ) : null}
 
+      {/* Better Alternatives */}
       {(result.alternatives?.length ?? 0) > 0 ? (
-        <section aria-labelledby="alternatives-h" className="space-y-2">
-          <h2 id="alternatives-h" className="text-xl font-semibold">Better-scoring alternatives that fit your profile</h2>
+        <section aria-labelledby="alternatives-h" className="space-y-3">
+          <h2 id="alternatives-h" className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+            Better-scoring alternatives that fit your profile
+          </h2>
           <AlternativesList alternatives={result.alternatives} />
         </section>
       ) : null}
 
+      {/* Evidence & Sources */}
       {(result.evidence?.length ?? 0) > 0 ? (
-        <section aria-labelledby="sources-h" className="space-y-2">
-          <h2 id="sources-h" className="text-xl font-semibold">Sources</h2>
+        <section aria-labelledby="sources-h" className="space-y-3">
+          <h2 id="sources-h" className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+            Sources
+          </h2>
           <EvidenceList evidence={result.evidence} />
-          <a className="text-sm underline" href={product.off_url} target="_blank" rel="noopener noreferrer">
-            See this product on Open Food Facts (to check or correct the data)
-          </a>
+          {product.off_url ? (
+            <a
+              className="inline-block text-xs font-medium text-primary underline underline-offset-2 hover:opacity-80"
+              href={product.off_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              See this product on Open Food Facts (to check or correct the data) ↗
+            </a>
+          ) : null}
         </section>
       ) : null}
 
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+      {/* Feedback & Actions */}
+      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border/80 pt-5">
         <FeedbackButtons productCode={product.code} threadId={result.thread_id} requestId={requestId} />
-        <Button variant="ghost" size="sm" onClick={copy}>
-          <Copy aria-hidden className="size-4" /> {copied ? 'Copied' : 'Copy result'}
+        <Button variant="outline" size="sm" onClick={copy} className="font-medium text-xs">
+          <Copy aria-hidden className="size-3.5" />
+          {copied ? 'Copied' : 'Copy result'}
         </Button>
       </footer>
     </article>
