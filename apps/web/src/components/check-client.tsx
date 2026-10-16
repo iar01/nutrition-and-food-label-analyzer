@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnalysisView } from '@/components/analysis-view';
+import { ChatThread } from '@/components/chat/chat-thread';
+import { DisclaimerBanner } from '@/components/chat/disclaimer-banner';
 import { ChooseProduct } from '@/components/choose-product';
 import { ProgressSteps } from '@/components/progress-steps';
 import { ErrorPanel } from '@/components/states';
@@ -30,6 +32,9 @@ export function CheckClient() {
 
   return (
     <div className="space-y-6">
+      {/* Prominent Educational Notice */}
+      <DisclaimerBanner />
+
       {state.phase === 'idle' || state.phase === 'running' || state.phase === 'choosing' ? (
         <ProgressSteps
           steps={state.phase === 'idle' ? [] : state.steps}
@@ -39,7 +44,18 @@ export function CheckClient() {
 
       {state.phase === 'error' ? <ErrorPanel error={state.error} onRetry={retry} /> : null}
 
-      {state.phase === 'done' ? <AnalysisView result={state.result} requestId={state.requestId} /> : null}
+      {state.phase === 'done' ? (
+        <>
+          <AnalysisView result={state.result} requestId={state.requestId} />
+          {state.result.thread_id ? (
+            <ChatThread
+              threadId={state.result.thread_id}
+              profile={profile}
+              productName={state.result.product.name ?? 'this product'}
+            />
+          ) : null}
+        </>
+      ) : null}
 
       <ChooseProduct
         open={state.phase === 'choosing'}

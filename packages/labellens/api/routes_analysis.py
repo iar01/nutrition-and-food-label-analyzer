@@ -16,6 +16,7 @@ from labellens.api.logging_setup import request_id_var
 from labellens.api.runner import (
     cached_chat_events,
     chat_events,
+    followup_state,
     initial_state,
     semantic_cached_chat_events,
     to_analysis,
@@ -205,9 +206,20 @@ async def chat(
     graph = services.graph
     inputs: Any
     if body.message is not None:
-        thread_id = str(uuid.uuid4())
-        config = {"configurable": {"thread_id": thread_id}}
-        inputs = initial_state(body.message, body.profile.model_dump(), bool(body.auto_pick))
+        if body.thread_id:
+            thread_id = str(body.thread_id)
+            config = {"configurable": {"thread_id": thread_id}}
+            existing_state = await run_in_threadpool(graph.get_state, config)
+            if existing_state and existing_state.values.get("product"):
+                inputs = followup_state(body.message, body.profile.model_dump())
+            else:
+                inputs = initial_state(
+                    body.message, body.profile.model_dump(), bool(body.auto_pick)
+                )
+        else:
+            thread_id = str(uuid.uuid4())
+            config = {"configurable": {"thread_id": thread_id}}
+            inputs = initial_state(body.message, body.profile.model_dump(), bool(body.auto_pick))
     else:
         thread_id = str(body.thread_id)
         config = {"configurable": {"thread_id": thread_id}}

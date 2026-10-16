@@ -32,8 +32,8 @@ class ChatRequest(BaseModel):
         resuming = bool(self.thread_id and self.resume_code)
         if self.message is None and not resuming:
             raise ValueError("Send either 'message', or 'thread_id' together with 'resume_code'.")
-        if self.message is not None and (self.thread_id or self.resume_code):
-            raise ValueError("Send either 'message' or 'thread_id' + 'resume_code', not both.")
+        if self.message is not None and self.resume_code:
+            raise ValueError("Cannot send both 'message' and 'resume_code'.")
         return self
 
 

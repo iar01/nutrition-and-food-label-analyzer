@@ -9,6 +9,7 @@ from labellens.agents.nodes.alternatives import alternatives_node
 from labellens.agents.nodes.analysts import additive_analyst, diet_checker, ingredient_analyst
 from labellens.agents.nodes.candidates import choose_product, find_candidates
 from labellens.agents.nodes.finish import critic, synthesizer
+from labellens.agents.nodes.product_qa import product_qa
 from labellens.agents.nodes.router import router
 from labellens.agents.state import AgentState
 
@@ -30,7 +31,14 @@ def join(state: AgentState) -> None:
 
 
 def after_router(state: AgentState) -> str:
-    return END if state.get("error") else "find_candidates"
+    if state.get("error"):
+        return END
+    kind = state.get("input_kind")
+    if kind == "followup_qa":
+        return "product_qa"
+    if kind == "alternatives":
+        return "alternatives"
+    return "find_candidates"
 
 
 def after_choose(state: AgentState) -> list[str] | str:
@@ -50,6 +58,7 @@ def after_critic(state: AgentState) -> str:
 def build_graph(deps: Deps, checkpointer: BaseCheckpointSaver | None = None) -> Any:
     b = StateGraph(AgentState)  # type: ignore
     b.add_node("router", bind(router, deps))  # type: ignore
+    b.add_node("product_qa", bind(product_qa, deps))  # type: ignore
     b.add_node("find_candidates", bind(find_candidates, deps))  # type: ignore
     b.add_node("choose_product", bind(choose_product, deps))  # type: ignore
     b.add_node("ingredient_analyst", bind(ingredient_analyst, deps))  # type: ignore
@@ -62,6 +71,7 @@ def build_graph(deps: Deps, checkpointer: BaseCheckpointSaver | None = None) -> 
 
     b.add_edge(START, "router")
     b.add_conditional_edges("router", after_router)
+    b.add_edge("product_qa", END)
     b.add_edge("find_candidates", "choose_product")
     b.add_conditional_edges("choose_product", after_choose)
     b.add_edge(ANALYSTS, "join")

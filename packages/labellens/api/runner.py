@@ -28,6 +28,7 @@ STEP_LABELS = {
     "additive_analyst": "Checking additives",
     "diet_checker": "Checking your diet and allergens",
     "join": "Combining the results",
+    "product_qa": "Answering your question",
     "alternatives": "Looking for better options",
     "synthesizer": "Writing the summary",
     "critic": "Reviewing the answer",
@@ -46,6 +47,19 @@ def initial_state(text: str, profile: dict[str, Any], auto_pick: bool) -> dict[s
         "error": None,
         "critic_feedback": None,
     }
+
+
+def followup_state(text: str, profile: dict[str, Any] | None = None) -> dict[str, Any]:
+    """State updates when sending a follow-up conversational question in an existing thread."""
+    state: dict[str, Any] = {
+        "user_text": text,
+        "messages": [HumanMessage(content=text)],
+        "error": None,
+        "critic_feedback": None,
+    }
+    if profile:
+        state["profile"] = profile
+    return state
 
 
 def to_product_summary(product: dict[str, Any]) -> ProductSummary:

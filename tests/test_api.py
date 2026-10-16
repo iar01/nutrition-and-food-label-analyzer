@@ -243,8 +243,8 @@ def test_chat_pauses_then_resumes(tmp_path: Path) -> None:
 
 def test_chat_request_validation(client: TestClient) -> None:
     assert client.post("/v1/chat", headers=HEADERS, json={}).status_code == 422
-    both = {"message": "hello", "thread_id": "abcdefgh1234"}
-    assert client.post("/v1/chat", headers=HEADERS, json=both).status_code == 422
+    conflicting = {"message": "hello", "resume_code": "12345678"}
+    assert client.post("/v1/chat", headers=HEADERS, json=conflicting).status_code == 422
     unknown = {"thread_id": "abcdefgh1234", "resume_code": "12345678"}
     assert client.post("/v1/chat", headers=HEADERS, json=unknown).status_code == 409
 

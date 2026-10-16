@@ -1,10 +1,14 @@
 import Link from 'next/link';
 import { Sparkles, ShieldCheck, HeartPulse, CheckCircle2 } from 'lucide-react';
+import { DisclaimerBanner } from '@/components/chat/disclaimer-banner';
 import { HomeTabs } from '@/components/home-tabs';
 
 export default function Home() {
   return (
     <div className="space-y-8">
+      {/* Prominent Educational Notice */}
+      <DisclaimerBanner />
+
       {/* Hero Section */}
       <section className="space-y-3 pt-2 text-center sm:text-left">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
