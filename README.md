@@ -262,6 +262,30 @@ openssl rand -hex 32
 > [!IMPORTANT]
 > **Security Notice:** Never hardcode or commit actual API keys or secrets to Git. Placeholders like `your_generated_api_key_here` are used throughout documentation. Real keys belong exclusively in `.env` and `apps/web/.env.local`, both of which are ignored by `.gitignore`.
 
+### How to Generate a Secure API Key
+
+Generate a cryptographically random, collision-resistant token using any standard tool:
+
+```bash
+# Option A: Python (Standard library, cross-platform)
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Option B: OpenSSL (Linux / macOS / Git Bash)
+openssl rand -hex 32
+
+# Option C: Windows PowerShell
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Copy the generated string and paste it into:
+- `.env` -> `API_KEYS=your_generated_api_key_here`
+- `apps/web/.env.local` -> `LABELLENS_API_KEY=your_generated_api_key_here`
+
+> [!WARNING]
+> Never hardcode or commit API keys or credentials into Git. Always use `.env.example` templates and keep actual secrets in gitignored `.env` / `.env.local` files.
+
+---
+
 #### 2. Root Backend Configuration (`.env`)
 Copy `.env.example` to `.env`:
 ```bash
@@ -551,29 +575,7 @@ LabelLens recognizes a total of **45 environment variables** across the applicat
 
 ---
 
-### How to Generate a Secure API Key
 
-Generate a cryptographically random, collision-resistant token using any standard tool:
-
-```bash
-# Option A: Python (Standard library, cross-platform)
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-
-# Option B: OpenSSL (Linux / macOS / Git Bash)
-openssl rand -hex 32
-
-# Option C: Windows PowerShell
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-```
-
-Copy the generated string and paste it into:
-- `.env` -> `API_KEYS=your_generated_api_key_here`
-- `apps/web/.env.local` -> `LABELLENS_API_KEY=your_generated_api_key_here`
-
-> [!WARNING]
-> Never hardcode or commit API keys or credentials into Git. Always use `.env.example` templates and keep actual secrets in gitignored `.env` / `.env.local` files.
-
----
 
 ### Comprehensive Variable Reference Table (All 45 Variables)
 
