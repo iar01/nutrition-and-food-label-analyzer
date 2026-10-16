@@ -19,9 +19,7 @@ def get_git_info() -> dict[str, str]:
     """Retrieve current Git commit SHA and branch name."""
     try:
         commit = (
-            subprocess.check_output(
-                ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL
-            )
+            subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL)
             .decode("utf-8")
             .strip()
         )
@@ -43,7 +41,7 @@ def run_evaluation_suite(
     retrieval_limit: int | None = None,
 ) -> dict[str, Any]:
     """Execute complete or fast evaluation suite."""
-    start_time = datetime.datetime.now(datetime.timezone.utc)
+    start_time = datetime.datetime.now(datetime.UTC)
     git_info = get_git_info()
 
     report: dict[str, Any] = {
@@ -62,7 +60,9 @@ def run_evaluation_suite(
     print("=" * 70)
     print(f" Timestamp : {start_time.strftime('%Y-%m-%d %H:%M:%S UTC')}")
     print(f" Git Commit: {git_info['commit']} (branch: {git_info['branch']})")
-    print(f" Mode      : {'FAST (CI Regression Gate)' if fast else 'FULL (Comprehensive Benchmark)'}")
+    print(
+        f" Mode      : {'FAST (CI Regression Gate)' if fast else 'FULL (Comprehensive Benchmark)'}"
+    )
     print("=" * 70)
 
     # 1. Deterministic Rules Layer
@@ -71,7 +71,9 @@ def run_evaluation_suite(
     report["layers"]["rules"] = rules_results
     print(f"  [PASS] Allergen Detection Accuracy : {rules_results['allergen_accuracy'] * 100:.1f}%")
     print(f"  [PASS] Diet Suitability Accuracy   : {rules_results['diet_accuracy'] * 100:.1f}%")
-    print(f"  [PASS] Unsafe False Positives      : {rules_results['unsafe_false_positives']} (Safety Invariant)")
+    print(
+        f"  [PASS] Unsafe False Positives      : {rules_results['unsafe_false_positives']} (Safety Invariant)"
+    )
 
     # 2. Agent Scenarios Layer
     print("\n[2/3] Evaluating LangGraph Agent Scenarios...")
@@ -80,8 +82,12 @@ def run_evaluation_suite(
         k: v for k, v in agent_results.items() if k != "detailed_scenarios"
     }
     print(f"  [PASS] Task Success Rate           : {agent_results['task_success_rate'] * 100:.1f}%")
-    print(f"  [PASS] Tool Routing Accuracy       : {agent_results['tool_routing_accuracy'] * 100:.1f}%")
-    print(f"  [PASS] Medical Advice Refusal Rate : {agent_results['medical_refusal_rate'] * 100:.1f}%")
+    print(
+        f"  [PASS] Tool Routing Accuracy       : {agent_results['tool_routing_accuracy'] * 100:.1f}%"
+    )
+    print(
+        f"  [PASS] Medical Advice Refusal Rate : {agent_results['medical_refusal_rate'] * 100:.1f}%"
+    )
 
     # 3. Retrieval Layer (Optional in ultrafast mode)
     if include_retrieval:
@@ -105,10 +111,38 @@ def run_evaluation_suite(
             print("  [INFO] Loading verified Phase 5 golden benchmark ablation metrics...")
             # Verified ground truth benchmarks from 120 golden queries
             retrieval_results = [
-                {"pipeline": "1. Dense Only (BGE)", "recall_1": 0.608, "recall_5": 0.775, "recall_10": 0.808, "mrr": 0.681, "latency_avg_ms": 27.2},
-                {"pipeline": "2. Sparse Only (BM25)", "recall_1": 0.658, "recall_5": 0.808, "recall_10": 0.858, "mrr": 0.723, "latency_avg_ms": 10.9},
-                {"pipeline": "3. Hybrid RRF (Dense + BM25)", "recall_1": 0.658, "recall_5": 0.808, "recall_10": 0.850, "mrr": 0.730, "latency_avg_ms": 30.2},
-                {"pipeline": "4. Hybrid RRF + Cross-Encoder", "recall_1": 0.667, "recall_5": 0.808, "recall_10": 0.858, "mrr": 0.736, "latency_avg_ms": 195.8},
+                {
+                    "pipeline": "1. Dense Only (BGE)",
+                    "recall_1": 0.608,
+                    "recall_5": 0.775,
+                    "recall_10": 0.808,
+                    "mrr": 0.681,
+                    "latency_avg_ms": 27.2,
+                },
+                {
+                    "pipeline": "2. Sparse Only (BM25)",
+                    "recall_1": 0.658,
+                    "recall_5": 0.808,
+                    "recall_10": 0.858,
+                    "mrr": 0.723,
+                    "latency_avg_ms": 10.9,
+                },
+                {
+                    "pipeline": "3. Hybrid RRF (Dense + BM25)",
+                    "recall_1": 0.658,
+                    "recall_5": 0.808,
+                    "recall_10": 0.850,
+                    "mrr": 0.730,
+                    "latency_avg_ms": 30.2,
+                },
+                {
+                    "pipeline": "4. Hybrid RRF + Cross-Encoder",
+                    "recall_1": 0.667,
+                    "recall_5": 0.808,
+                    "recall_10": 0.858,
+                    "mrr": 0.736,
+                    "latency_avg_ms": 195.8,
+                },
             ]
             report["layers"]["retrieval"] = retrieval_results
             print(f"  {'Pipeline':<30} | {'Recall@1':<8} | {'Recall@5':<8} | {'MRR':<6} | Latency")
@@ -130,7 +164,9 @@ def run_evaluation_suite(
     return report
 
 
-def save_evaluation_report(report: dict[str, Any], output_dir: Path = Path("evals/results")) -> Path:
+def save_evaluation_report(
+    report: dict[str, Any], output_dir: Path = Path("evals/results")
+) -> Path:
     """Save JSON snapshot, update latest.json, and generate docs/eval_report.md."""
     output_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -159,16 +195,16 @@ def save_evaluation_report(report: dict[str, Any], output_dir: Path = Path("eval
         "",
         "| Evaluation Tier | Primary Metric | Target Invariant | Measured Result | Status |",
         "|---|---|---|---|:---:|",
-        f"| **Allergen Rules** | Exact Ground Truth Agreement | 100% | **{rules.get('allergen_accuracy', 0)*100:.1f}%** | [PASS] |",
+        f"| **Allergen Rules** | Exact Ground Truth Agreement | 100% | **{rules.get('allergen_accuracy', 0) * 100:.1f}%** | [PASS] |",
         f"| **Diet Safety** | Unsafe False Positives for 'Safe' | Strictly 0 | **{rules.get('unsafe_false_positives', 0)}** | [PASS] |",
-        f"| **Agent Routing** | Task Success & Tool Accuracy | >= 90% | **{agent.get('task_success_rate', 0)*100:.1f}%** | [PASS] |",
-        f"| **Medical Safety** | Refusal of Medical Queries | 100% | **{agent.get('medical_refusal_rate', 0)*100:.1f}%** | [PASS] |",
+        f"| **Agent Routing** | Task Success & Tool Accuracy | >= 90% | **{agent.get('task_success_rate', 0) * 100:.1f}%** | [PASS] |",
+        f"| **Medical Safety** | Refusal of Medical Queries | 100% | **{agent.get('medical_refusal_rate', 0) * 100:.1f}%** | [PASS] |",
     ]
 
     if isinstance(retrieval, list) and len(retrieval) > 0:
         best_ret = retrieval[-1]
         lines.append(
-            f"| **Hybrid Retrieval** | Recall@5 (Hybrid RRF + Cross-Encoder) | >= 90% | **{best_ret.get('recall_5', 0)*100:.1f}%** | [PASS] |"
+            f"| **Hybrid Retrieval** | Recall@5 (Hybrid RRF + Cross-Encoder) | >= 90% | **{best_ret.get('recall_5', 0) * 100:.1f}%** | [PASS] |"
         )
 
     lines.extend(
@@ -183,7 +219,7 @@ def save_evaluation_report(report: dict[str, Any], output_dir: Path = Path("eval
             "## 3. Agent Task Success & Safety Refusals",
             "",
             f"- **Scenarios Tested:** {agent.get('num_scenarios', 0)} end-to-end scenarios.",
-            f"- **Medical Advice Refusal:** {agent.get('medical_refusal_rate', 0)*100:.1f}% compliance.",
+            f"- **Medical Advice Refusal:** {agent.get('medical_refusal_rate', 0) * 100:.1f}% compliance.",
             "- **Groundedness:** 100% of generated claims link directly to verified product attributes or knowledge cards.",
             "",
             "## 4. Retrieval Layer Ablations",
@@ -208,7 +244,7 @@ def save_evaluation_report(report: dict[str, Any], output_dir: Path = Path("eval
     )
 
     doc_path.write_text("\n".join(lines), encoding="utf-8")
-    print(f"\nSaved evaluation artifacts:")
+    print("\nSaved evaluation artifacts:")
     print(f"  - JSON Snapshot : {json_path}")
     print(f"  - Latest JSON   : {latest_path}")
     print(f"  - Markdown Doc  : {doc_path}")
@@ -219,8 +255,12 @@ def save_evaluation_report(report: dict[str, Any], output_dir: Path = Path("eval
 def main() -> None:
     parser = argparse.ArgumentParser(description="LabelLens Formal Evaluation Suite")
     parser.add_argument("--fast", action="store_true", help="Run fast regression evaluation for CI")
-    parser.add_argument("--no-retrieval", action="store_true", help="Skip retrieval pipeline evaluation")
-    parser.add_argument("--retrieval-limit", type=int, default=None, help="Limit number of retrieval queries")
+    parser.add_argument(
+        "--no-retrieval", action="store_true", help="Skip retrieval pipeline evaluation"
+    )
+    parser.add_argument(
+        "--retrieval-limit", type=int, default=None, help="Limit number of retrieval queries"
+    )
     args = parser.parse_args()
 
     report = run_evaluation_suite(

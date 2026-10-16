@@ -8,7 +8,6 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from evals.metrics import calculate_retrieval_metrics
 from labellens.config import settings
 from labellens.embeddings.sparse import Bm25SparseEmbedder
 from labellens.embeddings.text import BgeTextEmbedder
@@ -17,6 +16,8 @@ from labellens.retrieval.hybrid import HybridRetriever
 from labellens.retrieval.models import SearchHit
 from labellens.retrieval.qdrant_setup import get_client
 from labellens.retrieval.reranker import CrossEncoderReranker
+
+from evals.metrics import calculate_retrieval_metrics
 
 
 def evaluate_pipeline_on_queries(
@@ -47,9 +48,7 @@ def evaluate_pipeline_on_queries(
     query_types = {q.get("query_type", "unknown") for q in queries}
     breakdown = {}
     for qt in sorted(query_types):
-        sub_queries = [
-            q for q in normalized_queries if q.get("query_type", "unknown") == qt
-        ]
+        sub_queries = [q for q in normalized_queries if q.get("query_type", "unknown") == qt]
         sub_results = [
             retrieved_results[i]
             for i, q in enumerate(normalized_queries)

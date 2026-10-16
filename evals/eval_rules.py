@@ -6,9 +6,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-from evals.metrics import calculate_rules_metrics
 from labellens.agents.rules import allergen_status, diet_verdict
 from labellens.tools.knowledge import load_additive_cards
+
+from evals.metrics import calculate_rules_metrics
 
 
 def run_rules_evaluation(

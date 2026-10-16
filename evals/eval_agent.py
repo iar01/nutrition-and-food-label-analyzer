@@ -6,13 +6,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-from evals.metrics import calculate_agent_metrics
 from labellens.agents.deps import Deps
 from labellens.agents.graph import build_graph
 from labellens.agents.nodes.finish import BANNED
+from labellens.llm.client import get_llm
 from labellens.tools.knowledge import load_additive_cards
 from labellens.tools.products import ProductRepo
 from langchain_core.messages import HumanMessage
+
+from evals.metrics import calculate_agent_metrics
 
 MEDICAL_DISCLAIMER_TERMS = [
     "medical",
@@ -66,7 +68,9 @@ class ScenarioLLM:
                     "Always consult a certified doctor or healthcare professional for medical diagnosis and clinical treatment advice."
                 )
             else:
-                summary = "Product analyzed successfully against your profile and nutritional parameters."
+                summary = (
+                    "Product analyzed successfully against your profile and nutritional parameters."
+                )
             return Reply(
                 json.dumps(
                     {
@@ -86,18 +90,16 @@ class ScenarioSearcher:
         self.db_repo = db_repo
         self.fallback = fallback
 
-    def products(
-        self, query: str, limit: int = 5, filters: Any = None
-    ) -> list[dict[str, Any]]:
+    def products(self, query: str, limit: int = 5, filters: Any = None) -> list[dict[str, Any]]:
         # 1. DuckDB ILIKE query
         try:
             cur = self.db_repo.con.cursor()
             param = f"%{query.strip().lower()}%"
             rows = cur.execute(
                 """
-                SELECT code, name, brand, nutriscore_grade 
-                FROM products 
-                WHERE lower(name) LIKE ? OR lower(brand) LIKE ? 
+                SELECT code, name, brand, nutriscore_grade
+                FROM products
+                WHERE lower(name) LIKE ? OR lower(brand) LIKE ?
                 LIMIT ?
                 """,
                 [param, param, limit],
@@ -144,9 +146,7 @@ class ScenarioSearcher:
             }
         ]
 
-    def knowledge(
-        self, query: str, k: int = 3, exclude_types: Any = ()
-    ) -> list[dict[str, Any]]:
+    def knowledge(self, query: str, k: int = 3, exclude_types: Any = ()) -> list[dict[str, Any]]:
         return []
 
     def by_image(self, vector: Any, limit: int = 5) -> list[dict[str, Any]]:
@@ -192,7 +192,7 @@ def run_agent_evaluation(
     db_repo = ProductRepo()
     repo = ScenarioRepo(db_repo, fallback_prods)
     searcher = ScenarioSearcher(db_repo, fallback_prods)
-    llm = ScenarioLLM() if use_fake_llm else Deps().llm
+    llm = ScenarioLLM() if use_fake_llm else get_llm()
     additive_cards = load_additive_cards()
 
     deps = Deps(

@@ -31,7 +31,7 @@ RUN uv venv /opt/venv && \
 
 # Copy source packages and install
 COPY packages/ ./packages/
-RUN /opt/venv/bin/pip install --no-deps -e ./packages/labellens
+RUN uv pip install --python /opt/venv --no-deps ./packages/labellens
 
 # ------------------------------------------------------------------------------
 # Stage 2: Minimal Runtime Image
@@ -41,6 +41,7 @@ FROM python:3.12-slim AS runtime
 WORKDIR /app
 
 ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH="/app/packages:$PYTHONPATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PORT=8000 \
