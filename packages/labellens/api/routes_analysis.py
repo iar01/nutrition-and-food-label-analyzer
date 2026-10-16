@@ -13,7 +13,14 @@ from labellens.api.config import ApiConfig
 from labellens.api.errors import ApiError
 from labellens.api.logging_setup import request_id_var
 from labellens.api.runner import chat_events, initial_state, to_analysis
-from labellens.api.schemas import AnalyzeResponse, CandidateOut, ChatRequest, ErrorOut, Profile
+from labellens.api.schemas import (
+    AnalysisOut,
+    AnalyzeResponse,
+    CandidateOut,
+    ChatRequest,
+    ErrorOut,
+    Profile,
+)
 from labellens.api.security import guard
 from labellens.api.services import Services, get_services
 from labellens.api.slots import RunSlots
@@ -120,7 +127,11 @@ async def analyze(
 @router.post(
     "/chat",
     responses={
-        200: {"content": {"text/event-stream": {}}, "description": "Server-Sent Events stream."},
+        200: {
+            "model": AnalysisOut,
+            "content": {"text/event-stream": {}},
+            "description": "Server-Sent Events stream.",
+        },
         409: {"model": ErrorOut},
         503: {"model": ErrorOut},
     },

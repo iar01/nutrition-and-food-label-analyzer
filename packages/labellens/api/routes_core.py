@@ -3,11 +3,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from fastapi import Path as PathParam
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 from labellens.agents.types import Allergen, Diet, Grade
 from labellens.api.errors import ApiError
+from labellens.config import settings
 from labellens.api.runner import to_product_summary
 from labellens.api.schemas import (
     CheckResult,
@@ -73,6 +74,23 @@ async def get_product(
     if product is None:
         raise ApiError(404, "not_found", "No product with that barcode in the data.")
     return to_product_summary(product)
+
+
+@v1.get(
+    "/products/{code}/image",
+    response_class=FileResponse,
+    response_model=None,
+    tags=["products"],
+    responses={404: {"model": ErrorOut}},
+)
+async def product_image(
+    code: Annotated[str, PathParam(pattern=r"^\d{8,14}$", description="Barcode, 8 to 14 digits.")],
+) -> FileResponse:
+    """The product photo downloaded in Phase 4, if we have one."""
+    path = settings.images_dir / f"{code}.jpg"  # the pattern guarantees digits only: no path tricks
+    if not path.is_file():
+        raise ApiError(404, "no_image", "No image for that product.")
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @v1.get("/search", response_model=SearchResponse, tags=["products"])

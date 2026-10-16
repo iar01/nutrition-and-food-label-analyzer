@@ -135,6 +135,71 @@
         }
       }
     },
+    "/v1/products/{code}/image": {
+      "get": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Product Image",
+        "description": "The product photo downloaded in Phase 4, if we have one.",
+        "operationId": "product_image_v1_products__code__image_get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{8,14}$",
+              "description": "Barcode, 8 to 14 digits.",
+              "title": "Code"
+            },
+            "description": "Barcode, 8 to 14 digits."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/search": {
       "get": {
         "tags": [
@@ -514,7 +579,9 @@
             "description": "Server-Sent Events stream.",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisOut"
+                }
               },
               "text/event-stream": {}
             }
@@ -655,6 +722,73 @@
         ],
         "title": "AlternativeOut"
       },
+      "AnalysisOut": {
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/ProductSummary"
+          },
+          "verdicts": {
+            "$ref": "#/components/schemas/Verdicts"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "default": ""
+          },
+          "tips": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tips"
+          },
+          "ingredients": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IngredientFindings"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "additives": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdditiveSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/AlternativeOut"
+            },
+            "type": "array",
+            "title": "Alternatives"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceOut"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "answer_markdown": {
+            "type": "string",
+            "title": "Answer Markdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product",
+          "verdicts",
+          "answer_markdown"
+        ],
+        "title": "AnalysisOut"
+      },
       "AnalyzeResponse": {
         "properties": {
           "product": {
@@ -662,6 +796,18 @@
           },
           "verdicts": {
             "$ref": "#/components/schemas/Verdicts"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "default": ""
+          },
+          "tips": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tips"
           },
           "ingredients": {
             "anyOf": [
@@ -891,7 +1037,14 @@
             "$ref": "#/components/schemas/Profile"
           },
           "auto_pick": {
-            "type": "boolean",
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Auto Pick",
             "default": false
           }

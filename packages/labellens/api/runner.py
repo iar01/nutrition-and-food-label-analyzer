@@ -68,6 +68,7 @@ def to_product_summary(product: dict[str, Any]) -> ProductSummary:
 
 def to_analysis(values: dict[str, Any]) -> AnalysisOut:
     findings: dict[str, Any] = values.get("findings", {})
+    draft: dict[str, Any] = values.get("draft") or {}
     seen: set[str] = set()
     evidence: list[EvidenceOut] = []
     for item in values.get("evidence", []):
@@ -77,6 +78,8 @@ def to_analysis(values: dict[str, Any]) -> AnalysisOut:
     return AnalysisOut(
         product=to_product_summary(values["product"]),
         verdicts=Verdicts.model_validate(values["verdicts"]),
+        summary=str(draft.get("summary", "")),
+        tips=list(draft.get("tips", [])),
         ingredients=IngredientFindings.model_validate(findings["ingredients"])
         if findings.get("ingredients")
         else None,

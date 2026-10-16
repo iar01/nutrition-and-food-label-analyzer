@@ -154,6 +154,7 @@ def test_analyze_by_barcode(client: TestClient) -> None:
     assert body["verdicts"]["allergens"]["milk"]["status"] == "contains"
     assert body["verdicts"]["diets"]["vegan"]["status"] == "not_suitable"
     assert body["verdicts"]["overall"] == "not_suitable"
+    assert body["summary"] == "Test summary."
     assert body["request_id"] == response.headers["x-request-id"]
 
 

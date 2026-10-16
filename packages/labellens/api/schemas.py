@@ -25,7 +25,7 @@ class ChatRequest(BaseModel):
     thread_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9-]{8,64}$")
     resume_code: Barcode | None = None
     profile: Profile = Field(default_factory=Profile)
-    auto_pick: bool = False
+    auto_pick: bool | None = False
 
     @model_validator(mode="after")
     def check_mode(self) -> "ChatRequest":
@@ -104,6 +104,8 @@ class EvidenceOut(BaseModel):
 class AnalysisOut(BaseModel):
     product: ProductSummary
     verdicts: Verdicts
+    summary: str = ""
+    tips: list[str] = Field(default_factory=list)
     ingredients: IngredientFindings | None = None
     additives: AdditiveSection | None = None
     alternatives: list[AlternativeOut] = Field(default_factory=list)
