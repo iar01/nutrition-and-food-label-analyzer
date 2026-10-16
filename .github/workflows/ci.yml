@@ -7,7 +7,8 @@ on:
     branches: [main, master]
 
 jobs:
-  lint-and-test:
+  backend-qa:
+    name: Backend Lint, Test & Fast Evals
     runs-on: ubuntu-latest
 
     services:
@@ -84,3 +85,44 @@ jobs:
         run: |
           uv run pytest -v -m "not smoke"
 
+      - name: Run Formal Evaluation Regression Gate
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: labellens
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          QDRANT_HOST: localhost
+          QDRANT_PORT: 6333
+        run: |
+          uv run python -m evals.runner --fast
+
+  frontend-qa:
+    name: Frontend Lint, Typecheck & Standalone Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Lint Next.js
+        run: npm run lint
+
+      - name: Typecheck Next.js
+        run: npm run typecheck
+
+      - name: Build Next.js Production Standalone
+        run: npm run build

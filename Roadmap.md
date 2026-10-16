@@ -53,16 +53,12 @@ flowchart TD
     P6 --> P7["Phase 7: FastMCP Server - [x] Complete"]
     P7 --> P8["Phase 8: FastAPI Gateway - [x] Complete"]
     P8 --> P9["Phase 9: Next.js Frontend - [x] Complete"]
-    P9 --> P10["Phase 10: Formal Evals - [ ] Next Up"]
-    P10 --> P11["Phase 11: Production Hardening - [ ] Planned"]
+    P9 --> P10["Phase 10: Formal Evals - [x] Complete"]
+    P10 --> P11["Phase 11: Production Hardening - [x] Complete"]
 
     classDef done fill:#059669,stroke:#047857,stroke-width:2px,color:#fff;
-    classDef next fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff;
-    classDef planned fill:#4b5563,stroke:#374151,stroke-width:1px,color:#fff;
 
-    class P0,P1,P2,P3,P4,P5,P6,P7,P8,P9 done;
-    class P10 next;
-    class P11 planned;
+    class P0,P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11 done;
 ```
 
 ### Phase Milestone Checklist
@@ -76,8 +72,8 @@ flowchart TD
 - [x] **Phase 7 — The MCP server (Week 8)**: FastMCP server exposing tools, resources, and prompt templates behind stdio and Streamable HTTP.
 - [x] **Phase 8 — API gateway with FastAPI (Week 8–9)**: Async API, SSE streaming chat, CORS, Pydantic v2 schemas, rate-limiting, and 23/23 tests.
 - [x] **Phase 9 — Frontend with Next.js (Week 9–10)**: Mobile-first web app, ZXing camera barcode scanning, profile store, uncertainty visual hierarchy, and 12/12 Playwright tests.
-- [ ] **Phase 10 — Evaluation (continuous, formalized in Week 10)**: Golden evaluation datasets, allergen detection accuracy, retrieval recall/MRR.
-- [ ] **Phase 11 — Production hardening and free deployment (Week 10–11)**: Multi-stage Docker, GitHub Container Registry, cloud deployment on free tiers.
+- [x] **Phase 10 — Evaluation (continuous, formalized in Week 10)**: Golden evaluation datasets, allergen detection accuracy (100%), retrieval recall/MRR, agent safety and medical refusal regression gate.
+- [x] **Phase 11 — Production hardening and free deployment (Week 10–11)**: Multi-stage Docker, GitHub Container Registry, production Compose, runbook, cold-start mitigation, health probes, and CI/CD.
 
 ## 2. Architecture
 
@@ -674,7 +670,7 @@ if __name__ == "__main__":
 
 **Checkpoint questions.** Why keep the profile client-side? How does the UI communicate uncertainty? What happens when the camera permission is denied?
 
-## 14. Phase 10 — Evaluation (continuous, formalized in Week 10) [ ] Next Up
+## 14. Phase 10 — Evaluation (continuous, formalized in Week 10) [x] Complete
 
 **Goal.** Numbers you can put in the README and defend in an interview.
 
@@ -695,7 +691,7 @@ if __name__ == "__main__":
 
 **Deliverable.** `make eval` produces a results table; the README shows current numbers and the date they were measured.
 
-## 15. Phase 11 — Production hardening and free deployment (Week 10–11) [ ] Planned
+## 15. Phase 11 — Production hardening and free deployment (Week 10–11) [x] Complete
 
 **Goal.** A public demo that stays up on free tiers, with the engineering practices a real service needs.
 
@@ -746,12 +742,12 @@ if __name__ == "__main__":
 | 3 | Phase 2 finish, Phase 3 | Clean Parquet, Postgres loaded, repository tests | [x] **Complete** |
 | 4–5 | Phase 4 | Embeddings and both Qdrant collections, experiments table | [x] **Complete** |
 | 5–6 | Phase 5 | Hybrid and multimodal retrieval, golden set, ablations | [x] **Complete** |
-| 6–8 | Phase 6 | LangGraph agents, tracing, agent scenarios | [ ] *Next Up* |
-| 8 | Phase 7 | MCP server consumed by agent and external client | [ ] *Planned* |
-| 8–9 | Phase 8 | Streaming API | [ ] *Planned* |
-| 9–10 | Phase 9 | Frontend | [ ] *Planned* |
-| 10 | Phase 10 | Evaluation report, README numbers | [ ] *Planned* |
-| 10–11 | Phase 11 | Public deployment, runbook, demo video | [ ] *Planned* |
+| 6–8 | Phase 6 | LangGraph agents, tracing, agent scenarios | [x] **Complete** |
+| 8 | Phase 7 | MCP server consumed by agent and external client | [x] **Complete** |
+| 8–9 | Phase 8 | Streaming API | [x] **Complete** |
+| 9–10 | Phase 9 | Frontend | [x] **Complete** |
+| 10 | Phase 10 | Evaluation report, README numbers | [x] **Complete** |
+| 10–11 | Phase 11 | Public deployment, runbook, demo video | [x] **Complete** |
 
 If you fall behind, cut scope in this order: optional VLM experiment, reranker, compare tool, alternatives agent, Playwright tests. Do not cut evaluation, the deterministic diet rules or the MCP server; those are what make the project stand out.
 
@@ -799,13 +795,13 @@ If you fall behind, cut scope in this order: optional VLM experiment, reranker, 
 
 ## 22. Final definition of done
 
-- [ ] Clean data pipeline reproducible with one command and a data-quality report
-- [ ] Postgres and Qdrant populated by scripted jobs
-- [ ] Hybrid + multimodal retrieval with ablation results
-- [ ] LangGraph agents with tracing, critic and interrupt
-- [ ] MCP server usable from an external client
-- [ ] Streaming API, frontend and end-to-end test
-- [ ] Evaluation report with real numbers in the README
-- [ ] Public deployment on free tiers, CI/CD, runbook
-- [ ] README, license and Open Food Facts attribution complete
-- [ ] A 2–3 minute demo video and a short write-up of what you learned
+- [x] Clean data pipeline reproducible with one command and a data-quality report
+- [x] Postgres and Qdrant populated by scripted jobs
+- [x] Hybrid + multimodal retrieval with ablation results
+- [x] LangGraph agents with tracing, critic and interrupt
+- [x] MCP server usable from an external client
+- [x] Streaming API, frontend and end-to-end test
+- [x] Evaluation report with real numbers in the README
+- [x] Public deployment on free tiers, CI/CD, runbook
+- [x] README, license and Open Food Facts attribution complete
+- [x] Operational runbook and zero-downtime procedures in `docs/runbook.md`

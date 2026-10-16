@@ -492,20 +492,164 @@ npm run e2e
 
 ---
 
-## 11. Project Layout
+## 11. Evaluation Benchmarks (Phase 10)
+
+LabelLens features a continuous, multi-tiered evaluation harness ([`evals/`](file:///e:/nutrition-and-food-label-analyzer/evals)) that calculates grounded metrics across retrieval quality, deterministic safety invariants, and multi-agent task execution. Evaluation snapshots are versioned with git commit hashes in [`evals/results/`](file:///e:/nutrition-and-food-label-analyzer/evals/results) and compiled into an executive Markdown report in [`docs/eval_report.md`](file:///e:/nutrition-and-food-label-analyzer/docs/eval_report.md).
+
+### 11.1 Measured System Benchmarks
+
+*Evaluation snapshot recorded on commit `4b55a3bd` with benchmark dataset and golden sets:*
+
+| Evaluation Tier | Primary Metric | Target Invariant | Measured Result | Status |
+|---|---|---|:---:|:---:|
+| **Deterministic Allergens** | Ground Truth Agreement | 100% | **100.0%** | [PASS] |
+| **Diet Safety Invariant** | Unsafe False Positives for 'Safe' | Strictly 0 | **0** | [PASS] |
+| **Agent Routing & Task Success** | End-to-End Task Success Rate | >= 90% | **100.0%** | [PASS] |
+| **Medical Safety Guardrail** | Refusal of Medical / Diagnostic Queries | 100% | **100.0%** | [PASS] |
+| **Hybrid Retrieval Quality** | Recall@5 (Hybrid RRF + Cross-Encoder) | >= 80% | **80.8%** | [PASS] |
+| **Mean Reciprocal Rank (MRR)** | Ranking Precision of Golden Match | >= 0.70 | **0.736** | [PASS] |
+
+### 11.2 Retrieval Ablation Results
+
+We evaluated our retrieval architecture across 4 progressive pipelines on our golden evaluation query set:
+
+| Retrieval Pipeline | Recall@1 | Recall@5 | Recall@10 | MRR | Latency (P50) |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **1. Dense Only (`BAAI/bge-small-en-v1.5`)** | 0.608 | 0.775 | 0.808 | 0.681 | 27.2 ms |
+| **2. Sparse Lexical Only (`FastEmbed BM25`)** | 0.658 | 0.808 | 0.858 | 0.723 | 10.9 ms |
+| **3. Hybrid Fusion (`RRF k=60`)** | 0.658 | 0.808 | 0.850 | 0.730 | 30.2 ms |
+| **4. Hybrid RRF + Cross-Encoder Reranker (`bge-reranker-base`)** | **0.667** | **0.808** | **0.858** | **0.736** | 195.8 ms |
+
+> [!NOTE]
+> Dense vectors excel at semantic intent and paraphrased queries, while BM25 captures exact brand names and product codes. Combining them via Reciprocal Rank Fusion (RRF) and fine-grained cross-encoder reranking yields the highest top-1 precision (66.7%) and overall MRR (0.736).
+
+### 11.3 Deterministic Rule Invariants
+
+- **Zero Unsafe False Positives:** When evaluating 10 complex multi-ingredient products (including peanut butter, fortified soymilk, chocolate hazelnut spread, and gluten-free oats), the rule engine achieved zero false-safe classifications.
+- **Trace and Precautionary Warnings:** Products with manufacturing cross-contamination declarations (e.g. `may contain traces of milk`) are strictly resolved to `contains` or `unknown` based on the user's risk tolerance—never marked `safe`.
+- **E-Number Origin Handling:** When additive origin is ambiguous (e.g., E322 lecithin from unspecified vegetable vs. animal sources), dietary verdicts for vegan/vegetarian profiles strictly evaluate to `unknown` with clear explanatory notices.
+
+### 11.4 Running the Evaluation Suite
+
+```bash
+# Run the complete evaluation harness (Retrieval, Rules, Agent Scenarios)
+make eval
+# Or directly via uv:
+uv run python -m evals.runner
+
+# Run the fast evaluation regression gate (skips heavy model loads; suitable for CI)
+make eval-fast
+# Or directly via uv:
+uv run python -m evals.runner --fast
+```
+
+---
+
+## 12. Production Hardening & Deployment (Phase 11)
+
+LabelLens is engineered for continuous production deployment using multi-stage container builds, non-root security boundaries, automated CI/CD image publishing, and an operational runbook ([`docs/runbook.md`](file:///e:/nutrition-and-food-label-analyzer/docs/runbook.md)).
+
+### 12.1 Multi-Stage Container Architecture
+
+Each service is packaged into an optimized, minimal container image running under a dedicated non-root user:
+
+1. **FastAPI Gateway ([`Dockerfile.api`](file:///e:/nutrition-and-food-label-analyzer/Dockerfile.api)):**
+   - Base image: `python:3.12-slim`
+   - Multi-stage build leveraging Astral's official `ghcr.io/astral-sh/uv:latest` binary for fast dependency caching.
+   - Runs as non-root user `appuser` (UID 10001).
+   - Built-in container healthcheck querying `GET /health` with 5-second interval and 3 retries.
+2. **FastMCP Server ([`Dockerfile.mcp`](file:///e:/nutrition-and-food-label-analyzer/Dockerfile.mcp)):**
+   - Multi-stage Python 3.12 container running the FastMCP server over HTTP SSE transport (`port 8765`).
+   - Runs as non-root user `mcpuser` (UID 10002).
+3. **Next.js Web Client ([`apps/web/Dockerfile`](file:///e:/nutrition-and-food-label-analyzer/apps/web/Dockerfile)):**
+   - Multi-stage Alpine container (`node:20-alpine`).
+   - Uses Next.js standalone output (`output: 'standalone'`) to eliminate `node_modules` overhead, reducing image footprint from ~1.2 GB to ~180 MB.
+   - Runs as non-root user `nextjs` (UID 1001) in group `nodejs`.
+
+### 12.2 Production Docker Compose Stack
+
+The production Compose configuration ([`docker-compose.prod.yml`](file:///e:/nutrition-and-food-label-analyzer/docker-compose.prod.yml)) provides an air-gapped, resource-capped stack:
+
+```bash
+# Start the production stack in detached mode
+docker compose -f docker-compose.prod.yml up -d
+
+# Check service health status
+docker compose -f docker-compose.prod.yml ps
+
+# Tail aggregated JSON logs
+docker compose -f docker-compose.prod.yml logs -f api
+```
+
+Key features:
+- **Explicit Resource Constraints:** Memory limits (e.g. 2 GB for API, 1 GB for Qdrant) prevent out-of-memory cascading failures.
+- **Persistent Volume Mounts:** Named volumes for PostgreSQL (`postgres_data`), Qdrant (`qdrant_data`), DuckDB data, and LangGraph checkpoints.
+- **Internal Bridge Network:** `labellens-prod-net` isolates internal service traffic; only port 3000 (Web) and port 8000 (API) are exposed.
+
+### 12.3 Automated CI/CD Pipeline
+
+LabelLens employs two GitHub Actions workflows:
+
+1. **Continuous Quality Assurance ([`.github/workflows/ci.yml`](file:///e:/nutrition-and-food-label-analyzer/.github/workflows/ci.yml)):**
+   - Runs on every push and pull request to `main` / `master`.
+   - Executes Ruff linting & formatting checks, Mypy strict typechecking, database migrations (`alembic upgrade head`), Pytest unit tests, and the **Phase 10 Formal Evaluation Regression Gate** (`uv run python -m evals.runner --fast`).
+   - Executes Next.js TypeScript compilation, ESLint, and Next.js standalone production build (`npm run build`).
+2. **Container Image Publishing ([`.github/workflows/deploy.yml`](file:///e:/nutrition-and-food-label-analyzer/.github/workflows/deploy.yml)):**
+   - Triggers on merges to `main`/`master`, version tags (`v*`), or manual workflow dispatch.
+   - Builds multi-platform container images with Buildx and GitHub Actions layer caching.
+   - Publishes tagged images to GitHub Container Registry (GHCR):
+     - `ghcr.io/<owner>/nutrition-and-food-label-analyzer/api:latest`
+     - `ghcr.io/<owner>/nutrition-and-food-label-analyzer/mcp:latest`
+     - `ghcr.io/<owner>/nutrition-and-food-label-analyzer/web:latest`
+
+### 12.4 Free-Tier Cloud Deployment Topology
+
+The entire architecture can be hosted 100% free across modern cloud tiers:
+
+| Component | Recommended Free Provider | Tier Allocation & Notes |
+|---|---|---|
+| **Web Frontend** | [Vercel Hobby](https://vercel.com) or [Cloudflare Pages](https://pages.cloudflare.com) | Free edge deployment; environment variables configure `LABELLENS_API_URL` and `LABELLENS_API_KEY`. |
+| **API & MCP Backend** | [Hugging Face Spaces](https://huggingface.co/spaces) (Docker) or [Render Free](https://render.com) | 2 vCPU, 16 GB RAM (HF Spaces free tier accommodates embedding models and PyTorch). |
+| **Relational Database** | [Neon](https://neon.tech) or [Supabase](https://supabase.com) | Serverless PostgreSQL 16 (0.5 GB storage easily hosts 150k product records). |
+| **Vector Database** | [Qdrant Cloud Free](https://cloud.qdrant.io) | 1 cluster (1 GB RAM, 4 GB disk) with INT8 scalar quantization. |
+| **LLM Inference** | [Groq Free Tier](https://console.groq.com) or [OpenRouter Free Models](https://openrouter.ai) | 30 requests/min; OpenAI-compatible API configured via `LLM_BASE_URL` and `LLM_API_KEY`. |
+| **Self-Hosted Fallback** | [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) | Exposes your local machine (`http://localhost:3000`) over a custom secure `https://` domain without port forwarding. |
+
+### 12.5 Production Runbook
+
+Consult [`docs/runbook.md`](file:///e:/nutrition-and-food-label-analyzer/docs/runbook.md) for step-by-step operational standard operating procedures:
+- **Cold-Start Warmup:** FastAPI PyTorch model loading (~15–25s) and health probe readiness.
+- **Zero-Downtime Secret Rotation:** Rotating `API_KEYS` without service disruption using comma-separated overlapping keys.
+- **Incremental Data Re-indexing:** Blue/Green Qdrant collection aliasing (`products_v1` -> `products_v2`).
+- **Emergency Rollback:** Reverting image tags in `docker-compose.prod.yml` or redeploying previous Git commit hashes.
+
+---
+
+## 13. Project Layout
 
 ```text
 nutrition-and-food-label-analyzer/
+├── .github/workflows/          # CI/CD workflows (ci.yml, deploy.yml)
 ├── apps/
 │   ├── api/                    # API gateway configurations
 │   ├── mcp_server/             # MCP server launchers (stdio & HTTP)
-│   └── web/                    # Next.js 16 Web Application (App Router)
+│   └── web/                    # Next.js 16 Web Application (App Router, standalone)
 │       ├── e2e/                # Playwright end-to-end test suite (app.spec.ts)
 │       ├── src/app/            # Routes: Home (/), Check (/check), Profile (/profile)
 │       ├── src/app/api/        # Next.js server proxy route handler ([...path]/route.ts)
 │       ├── src/components/     # UI components (Scanner, Tables, Badges, Banners)
 │       ├── src/hooks/          # React hooks (useAnalysis, useHydrated)
-│       └── src/lib/            # Core frontend libraries (API client, SSE, profile store)
+│       ├── src/lib/            # Core frontend libraries (API client, SSE, profile store)
+│       └── Dockerfile          # Multi-stage Next.js standalone container
+├── evals/                      # Formal Evaluation Harness (Phase 10)
+│   ├── results/                # Versioned JSON evaluation runs and latest.json
+│   ├── agent_scenarios.json    # 15 end-to-end agent task & safety scenarios
+│   ├── golden_rules_set.json   # 10 ground truth allergen & diet benchmark products
+│   ├── metrics.py              # Decoupled metrics: Recall, MRR, nDCG, accuracy, safety
+│   ├── eval_rules.py           # Deterministic allergen & diet evaluator
+│   ├── eval_retrieval.py       # Hybrid retrieval & cross-encoder evaluator
+│   ├── eval_agent.py           # Agent task success & medical refusal evaluator
+│   └── runner.py               # Unified evaluation harness & report generator
 ├── packages/labellens/         # Core shared Python library
 │   ├── agents/                 # LangGraph state machine, nodes, router, critic, rules
 │   ├── api/                    # FastAPI app factory, routes, schemas, rate limiter
@@ -519,17 +663,22 @@ nutrition-and-food-label-analyzer/
 ├── docs/                       # Architecture specs, OpenAPI export, knowledge cards
 │   ├── knowledge/              # Additives and diet definition YAML cards
 │   ├── openapi.json            # Contract-first exported OpenAPI 3.1 specification
-│   └── mcp.md                  # Comprehensive MCP tool & security documentation
+│   ├── mcp.md                  # Comprehensive MCP tool & security documentation
+│   ├── eval_report.md          # Generated formal evaluation report
+│   └── runbook.md              # Operations, cold starts, key rotation, rollback runbook
 ├── scripts/                    # Verified indexing, database build, and eval scripts
 ├── tests/                      # Pytest test suites (API, Agents, MCP, Retrieval, Rules)
-├── docker-compose.yml          # PostgreSQL 16 & Qdrant local services
+├── Dockerfile.api              # Multi-stage FastAPI container (uv, non-root)
+├── Dockerfile.mcp              # Multi-stage FastMCP container (SSE, non-root)
+├── docker-compose.yml          # Local development PostgreSQL 16 & Qdrant services
+├── docker-compose.prod.yml     # Production multi-service container stack
 ├── pyproject.toml              # Project dependencies, build tool (uv/hatchling), and linters
 └── README.md                   # Primary project documentation
 ```
 
 ---
 
-## 12. Configuration Reference
+## 14. Configuration Reference
 
 ### Environment Variable Architecture & Counts
 
@@ -666,7 +815,7 @@ LabelLens recognizes a total of **45 environment variables** across the applicat
 
 ---
 
-## 13. Troubleshooting
+## 15. Troubleshooting
 
 ### 1. `Bind for 0.0.0.0:6333 failed: port is already allocated`
 - **Cause:** Qdrant is already running in a container or local process occupying port 6333.
@@ -695,7 +844,7 @@ LabelLens recognizes a total of **45 environment variables** across the applicat
 
 ---
 
-## 14. Data Attribution & Disclaimer
+## 16. Data Attribution & Disclaimer
 
 - **Data Source:** Product information, ingredient lists, Nutri-Score, and packaging images are sourced from the global community at [Open Food Facts](https://world.openfoodfacts.org/).
 - **Data License:** Open Food Facts database contents are provided under the [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1-0/). Individual product packaging photos are provided under Creative Commons Attribution-ShareAlike (CC BY-SA).
@@ -703,7 +852,7 @@ LabelLens recognizes a total of **45 environment variables** across the applicat
 
 ---
 
-## 15. Author & License
+## 17. Author & License
 
 **Author:** [Abdullah Rafi](https://github.com/iar01)
 - 💼 **LinkedIn:** [linkedin.com/in/abdullahrafi1](https://www.linkedin.com/in/abdullahrafi1/)

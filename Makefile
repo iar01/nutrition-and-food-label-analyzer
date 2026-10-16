@@ -24,3 +24,9 @@ test-retrieval:
 eval-retrieval:
 	uv run python scripts/eval_retrieval_ablations.py
 
+eval:
+	uv run python -m evals.runner
+
+eval-fast:
+	uv run python -m evals.runner --fast
+

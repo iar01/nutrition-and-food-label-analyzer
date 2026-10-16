@@ -1,0 +1,262 @@
+[
+  {
+    "id": "rule_01_milk_chocolate",
+    "name": "Milk Chocolate Bar",
+    "product": {
+      "code": "3017620422003",
+      "name": "Milk Chocolate Bar",
+      "ingredients": "Sugar, cocoa butter, whole milk powder, cocoa mass, soy lecithin, natural vanilla flavor",
+      "allergens_tags": ["en:milk", "en:soybeans"],
+      "traces_tags": ["en:nuts", "en:gluten"],
+      "additives_tags": ["en:e322"],
+      "diet_vegan": "no",
+      "diet_vegetarian": "yes",
+      "diet_gluten_free": "no",
+      "diet_lactose_free": "no",
+      "diet_nut_free": "no",
+      "diet_palm_oil_free": "yes"
+    },
+    "expected_allergens": {
+      "milk": "contains",
+      "soy": "contains",
+      "nuts": "may_contain",
+      "gluten": "may_contain",
+      "peanuts": "not_listed",
+      "fish": "not_listed"
+    },
+    "expected_diets": {
+      "vegan": "not_suitable",
+      "vegetarian": "suitable",
+      "gluten_free": "not_suitable",
+      "lactose_free": "not_suitable"
+    }
+  },
+  {
+    "id": "rule_02_pure_oats",
+    "name": "Certified Gluten-Free Rolled Oats",
+    "product": {
+      "code": "5060123456789",
+      "name": "Gluten-Free Rolled Oats",
+      "ingredients": "100% whole grain gluten-free rolled oats",
+      "allergens_tags": [],
+      "traces_tags": [],
+      "additives_tags": [],
+      "diet_vegan": "yes",
+      "diet_vegetarian": "yes",
+      "diet_gluten_free": "yes",
+      "diet_lactose_free": "yes",
+      "diet_nut_free": "yes",
+      "diet_palm_oil_free": "yes"
+    },
+    "expected_allergens": {
+      "gluten": "not_listed",
+      "milk": "not_listed",
+      "nuts": "not_listed"
+    },
+    "expected_diets": {
+      "vegan": "suitable",
+      "vegetarian": "suitable",
+      "gluten_free": "suitable",
+      "lactose_free": "suitable"
+    }
+  },
+  {
+    "id": "rule_03_gummy_bears_gelatin",
+    "name": "Traditional Gummy Bears",
+    "product": {
+      "code": "4001686301525",
+      "name": "Gummy Bears",
+      "ingredients": "Glucose syrup, sugar, pork gelatine, dextrose, citric acid, fruit concentrates",
+      "allergens_tags": [],
+      "traces_tags": ["en:milk"],
+      "additives_tags": ["en:e330"],
+      "diet_vegan": "no",
+      "diet_vegetarian": "no",
+      "diet_gluten_free": "yes",
+      "diet_lactose_free": "yes",
+      "diet_nut_free": "yes",
+      "diet_palm_oil_free": "yes"
+    },
+    "expected_allergens": {
+      "milk": "may_contain",
+      "peanuts": "not_listed"
+    },
+    "expected_diets": {
+      "vegan": "not_suitable",
+      "vegetarian": "not_suitable"
+    }
+  },
+  {
+    "id": "rule_04_peanut_butter",
+    "name": "Crunchy Peanut Butter",
+    "product": {
+      "code": "8710400000000",
+      "name": "Crunchy Peanut Butter",
+      "ingredients": "Roasted peanuts (95%), palm oil, sea salt",
+      "allergens_tags": ["en:peanuts"],
+      "traces_tags": ["en:nuts", "en:sesame-seeds"],
+      "additives_tags": [],
+      "diet_vegan": "yes",
+      "diet_vegetarian": "yes",
+      "diet_gluten_free": "yes",
+      "diet_lactose_free": "yes",
+      "diet_nut_free": "no",
+      "diet_palm_oil_free": "no"
+    },
+    "expected_allergens": {
+      "peanuts": "contains",
+      "nuts": "may_contain",
+      "sesame": "may_contain",
+      "milk": "not_listed"
+    },
+    "expected_diets": {
+      "vegan": "suitable",
+      "nut_free": "not_suitable",
+      "palm_oil_free": "not_suitable"
+    }
+  },
+  {
+    "id": "rule_05_missing_ingredients",
+    "name": "Mystery Imported Snack",
+    "product": {
+      "code": "9999999999999",
+      "name": "Mystery Imported Snack",
+      "ingredients": "",
+      "allergens_tags": null,
+      "traces_tags": [],
+      "additives_tags": [],
+      "diet_vegan": "unknown",
+      "diet_vegetarian": "unknown"
+    },
+    "expected_allergens": {
+      "gluten": "unknown",
+      "milk": "unknown"
+    },
+    "expected_diets": {
+      "vegan": "unknown",
+      "vegetarian": "unknown"
+    }
+  },
+  {
+    "id": "rule_06_soy_lecithin_hint",
+    "name": "Dark Chocolate with E322",
+    "product": {
+      "code": "7610400010001",
+      "name": "Dark Chocolate 70%",
+      "ingredients": "Cocoa mass, sugar, cocoa butter, emulsifier (lecithins)",
+      "allergens_tags": [],
+      "traces_tags": ["en:milk"],
+      "additives_tags": ["en:e322"],
+      "diet_vegan": "yes",
+      "diet_vegetarian": "yes"
+    },
+    "expected_allergens": {
+      "soy": "unknown",
+      "milk": "may_contain"
+    },
+    "expected_diets": {
+      "vegan": "unknown",
+      "vegetarian": "suitable"
+    }
+  },
+  {
+    "id": "rule_07_carmine_additive",
+    "name": "Red Berry Yogurt",
+    "product": {
+      "code": "3228881002003",
+      "name": "Strawberry Yogurt with E120",
+      "ingredients": "Yogurt (milk), strawberries, sugar, color (E120 carmine)",
+      "allergens_tags": ["en:milk"],
+      "traces_tags": [],
+      "additives_tags": ["en:e120"],
+      "diet_vegan": "no",
+      "diet_vegetarian": "no",
+      "diet_lactose_free": "no"
+    },
+    "expected_allergens": {
+      "milk": "contains"
+    },
+    "expected_diets": {
+      "vegan": "not_suitable",
+      "vegetarian": "not_suitable",
+      "lactose_free": "not_suitable"
+    }
+  },
+  {
+    "id": "rule_08_wheat_bread",
+    "name": "Whole Wheat Sandwich Bread",
+    "product": {
+      "code": "5000128001002",
+      "name": "Whole Wheat Bread",
+      "ingredients": "Whole wheat flour, water, yeast, salt, vegetable oil",
+      "allergens_tags": ["en:gluten"],
+      "traces_tags": ["en:sesame-seeds", "en:soybeans"],
+      "additives_tags": [],
+      "diet_vegan": "yes",
+      "diet_vegetarian": "yes",
+      "diet_gluten_free": "no"
+    },
+    "expected_allergens": {
+      "gluten": "contains",
+      "sesame": "may_contain",
+      "soy": "may_contain",
+      "eggs": "not_listed"
+    },
+    "expected_diets": {
+      "gluten_free": "not_suitable",
+      "vegan": "suitable"
+    }
+  },
+  {
+    "id": "rule_09_almond_milk",
+    "name": "Unsweetened Almond Milk",
+    "product": {
+      "code": "8410000123456",
+      "name": "Almond Drink",
+      "ingredients": "Water, almonds (2.5%), calcium carbonate, sea salt, stabilizer (gellan gum)",
+      "allergens_tags": ["en:nuts"],
+      "traces_tags": [],
+      "additives_tags": ["en:e418"],
+      "diet_vegan": "yes",
+      "diet_vegetarian": "yes",
+      "diet_gluten_free": "yes",
+      "diet_lactose_free": "yes",
+      "diet_nut_free": "no"
+    },
+    "expected_allergens": {
+      "nuts": "contains",
+      "milk": "not_listed",
+      "gluten": "not_listed"
+    },
+    "expected_diets": {
+      "vegan": "suitable",
+      "lactose_free": "suitable",
+      "nut_free": "not_suitable"
+    }
+  },
+  {
+    "id": "rule_10_canned_tuna",
+    "name": "Tuna in Olive Oil",
+    "product": {
+      "code": "8000123987654",
+      "name": "Yellowfin Tuna Fillets",
+      "ingredients": "Yellowfin tuna, extra virgin olive oil, salt",
+      "allergens_tags": ["en:fish"],
+      "traces_tags": [],
+      "additives_tags": [],
+      "diet_vegan": "no",
+      "diet_vegetarian": "no",
+      "diet_gluten_free": "yes",
+      "diet_lactose_free": "yes"
+    },
+    "expected_allergens": {
+      "fish": "contains",
+      "crustaceans": "not_listed",
+      "molluscs": "not_listed"
+    },
+    "expected_diets": {
+      "vegan": "not_suitable",
+      "vegetarian": "not_suitable"
+    }
+  }
+]

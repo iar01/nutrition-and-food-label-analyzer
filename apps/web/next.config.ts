@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   poweredByHeader: false,
   // Compression can buffer streamed responses. We stream Server-Sent Events, so keep it off
   // here and let a reverse proxy handle compression in production (Phase 11).

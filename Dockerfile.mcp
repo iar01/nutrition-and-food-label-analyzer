@@ -1,0 +1,68 @@
+# ==============================================================================
+# LabelLens FastMCP Server - Production Multi-Stage Dockerfile
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Stage 1: Dependency Builder
+# ------------------------------------------------------------------------------
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+ENV UV_SYSTEM_PYTHON=0 \
+    UV_COMPILE_BYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /uvx /bin/
+
+COPY pyproject.toml uv.lock ./
+
+RUN uv venv /opt/venv && \
+    uv sync --frozen --no-dev --no-install-project
+
+COPY packages/ ./packages/
+RUN /opt/venv/bin/pip install --no-deps -e ./packages/labellens
+
+# ------------------------------------------------------------------------------
+# Stage 2: Minimal Runtime Image
+# ------------------------------------------------------------------------------
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PORT=8765 \
+    APP_ENV=production
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -g 10001 appgroup && \
+    useradd -u 10001 -g appgroup -s /bin/bash -m appuser
+
+COPY --from=builder --chown=appuser:appgroup /opt/venv /opt/venv
+
+COPY --chown=appuser:appgroup packages/ /app/packages/
+COPY --chown=appuser:appgroup docs/knowledge/ /app/docs/knowledge/
+COPY --chown=appuser:appgroup data/interim/ /app/data/interim/
+
+RUN mkdir -p /app/data && chown -R appuser:appgroup /app/data
+
+USER appuser
+
+EXPOSE 8765
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -f http://127.0.0.1:8765/health || exit 1
+
+ENTRYPOINT ["uvicorn", "labellens.mcp_server.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8765"]

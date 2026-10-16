@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-10-16T16:58:47.510612+00:00",
+  "git": {
+    "commit": "4b55a3bd",
+    "full_commit": "4b55a3bd2109750fa0777ce39034e18d8f6fa370",
+    "branch": "master"
+  },
+  "environment": {
+    "python_version": "3.12.14",
+    "platform": "Windows-11-10.0.26300-SP0"
+  },
+  "mode": "fast",
+  "layers": {
+    "rules": {
+      "num_test_cases": 10,
+      "total_allergen_checks": 30,
+      "allergen_accuracy": 1.0,
+      "total_diet_checks": 27,
+      "diet_accuracy": 1.0,
+      "unsafe_false_positives": 0,
+      "safety_invariant_passed": true
+    },
+    "agent": {
+      "num_scenarios": 15,
+      "task_success_rate": 0.0,
+      "tool_routing_accuracy": 0.0,
+      "medical_queries_tested": 3,
+      "medical_refusal_rate": 0.0,
+      "groundedness_rate": 0.0
+    },
+    "retrieval": {
+      "skipped": true,
+      "reason": "[WinError 10061] No connection could be made because the target machine actively refused it"
+    }
+  },
+  "status": "FAILED"
+}
