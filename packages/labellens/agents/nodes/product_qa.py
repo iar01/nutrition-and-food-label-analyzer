@@ -54,14 +54,20 @@ def product_qa(state: AgentState, deps: Deps) -> dict[str, Any]:
         reply = raw_reply
     except Exception:
         logger.warning("product_qa LLM call failed, providing fallback", exc_info=True)
+        ing_clean = (
+            product.get("ingredients") or "the ingredients listed in the product overview"
+        ).rstrip(".")
         reply = (
             f"Based on the label for **{product.get('name', 'this product')}**, "
-            f"it contains {product.get('ingredients', 'the ingredients listed in the product overview')}. "
+            f"it contains {ing_clean}. "
             "Please check the physical packaging for the most current details."
         )
 
-    disclaimer = "\n\n> ⚠️ **Educational & Learning Project Notice**:Not health advice."
-    if disclaimer not in reply:
+    disclaimer = (
+        "\n\n> ⚠️ **Educational & Learning Project Notice**: Not health advice. "
+        "Always consult a healthcare professional and check physical packaging."
+    )
+    if "Educational & Learning Project Notice" not in reply:
         reply += disclaimer
 
     return {

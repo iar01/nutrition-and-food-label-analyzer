@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 import { postChat } from '@/lib/api/client';
 import { readSse } from '@/lib/api/sse';
 import { FollowupChips } from '@/components/chat/followup-chips';
+import { MarkdownText } from '@/components/chat/markdown-text';
 import { Button } from '@/components/ui/button';
 import type { Profile } from '@/lib/api/types';
 
@@ -182,16 +184,20 @@ export function ChatThread({ threadId, profile, productName }: ChatThreadProps) 
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed shadow-2xs ${
                   msg.sender === 'user'
-                    ? 'bg-primary text-primary-foreground rounded-tr-xs'
-                    : 'bg-muted/70 text-foreground border border-border/70 rounded-tl-xs whitespace-pre-wrap'
+                    ? 'bg-primary text-primary-foreground rounded-tr-xs whitespace-pre-wrap'
+                    : 'bg-muted/70 text-foreground border border-border/70 rounded-tl-xs'
                 }`}
               >
-                {msg.text || (msg.isStreaming ? (
+                {msg.sender === 'user' ? (
+                  msg.text
+                ) : msg.text ? (
+                  <MarkdownText content={msg.text} />
+                ) : msg.isStreaming ? (
                   <span className="inline-flex items-center gap-1.5 text-muted-foreground italic">
                     <Loader2 className="size-3.5 animate-spin" />
                     {stepLabel ?? 'Thinking…'}
                   </span>
-                ) : '')}
+                ) : null}
               </div>
               {msg.sender === 'user' && (
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground mt-1">
@@ -237,9 +243,17 @@ export function ChatThread({ threadId, profile, productName }: ChatThreadProps) 
         </Button>
       </div>
 
-      <footer className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
-        <span>⚠️ Learning project: Not health advice.</span>
-        <span>Always check package labels.</span>
+      <footer className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground pt-1">
+        <span className="flex items-center gap-1.5">
+          <span>⚠️ Personal learning project · Not health advice.</span>
+          <Link
+            href="/disclaimer"
+            className="font-medium underline underline-offset-2 hover:text-foreground transition-colors"
+          >
+            Full disclaimer
+          </Link>
+        </span>
+        <span>Always check physical packaging.</span>
       </footer>
     </section>
   );
