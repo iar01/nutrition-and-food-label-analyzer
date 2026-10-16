@@ -51,18 +51,18 @@ flowchart TD
     P4 --> P5["Phase 5: Hybrid & Multimodal Retrieval - [x] Complete"]
     P5 --> P6["Phase 6: LangGraph Agents - [x] Complete"]
     P6 --> P7["Phase 7: FastMCP Server - [x] Complete"]
-    P7 --> P8["Phase 8: FastAPI Gateway - [ ] Next Up"]
-    P8 --> P9["Phase 9: Next.js Frontend - [ ] Planned"]
-    P9 --> P10["Phase 10: Formal Evals - [ ] Planned"]
+    P7 --> P8["Phase 8: FastAPI Gateway - [x] Complete"]
+    P8 --> P9["Phase 9: Next.js Frontend - [x] Complete"]
+    P9 --> P10["Phase 10: Formal Evals - [ ] Next Up"]
     P10 --> P11["Phase 11: Production Hardening - [ ] Planned"]
 
     classDef done fill:#059669,stroke:#047857,stroke-width:2px,color:#fff;
     classDef next fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff;
     classDef planned fill:#4b5563,stroke:#374151,stroke-width:1px,color:#fff;
 
-    class P0,P1,P2,P3,P4,P5,P6,P7 done;
-    class P8 next;
-    class P9,P10,P11 planned;
+    class P0,P1,P2,P3,P4,P5,P6,P7,P8,P9 done;
+    class P10 next;
+    class P11 planned;
 ```
 
 ### Phase Milestone Checklist
@@ -74,8 +74,8 @@ flowchart TD
 - [x] **Phase 5 — Retrieval: hybrid, multimodal, reranked (Week 5–6)**: Reciprocal Rank Fusion (RRF), cross-encoder reranker, multimodal router.
 - [x] **Phase 6 — Agents with LangGraph (Week 6–8)**: Multi-agent supervisor, additive analyst, nutrition/diet analyst, critic, human-in-the-loop.
 - [x] **Phase 7 — The MCP server (Week 8)**: FastMCP server exposing tools, resources, and prompt templates behind stdio and Streamable HTTP.
-- [ ] **Phase 8 — API gateway with FastAPI (Week 8–9)**: Async API, SSE streaming chat, CORS, Pydantic v2 schemas.
-- [ ] **Phase 9 — Frontend with Next.js (Week 9–10)**: Mobile-responsive UI, camera barcode scanning, live streaming chat.
+- [x] **Phase 8 — API gateway with FastAPI (Week 8–9)**: Async API, SSE streaming chat, CORS, Pydantic v2 schemas, rate-limiting, and 23/23 tests.
+- [x] **Phase 9 — Frontend with Next.js (Week 9–10)**: Mobile-first web app, ZXing camera barcode scanning, profile store, uncertainty visual hierarchy, and 12/12 Playwright tests.
 - [ ] **Phase 10 — Evaluation (continuous, formalized in Week 10)**: Golden evaluation datasets, allergen detection accuracy, retrieval recall/MRR.
 - [ ] **Phase 11 — Production hardening and free deployment (Week 10–11)**: Multi-stage Docker, GitHub Container Registry, cloud deployment on free tiers.
 
@@ -623,7 +623,7 @@ if __name__ == "__main__":
 
 **Checkpoint questions.** When is something a resource rather than a tool? Why does stdio not need authentication but HTTP does? What can go wrong if a tool description is vague?
 
-## 12. Phase 8 — API gateway with FastAPI (Week 8–9) [ ] Next Up
+## 12. Phase 8 — API gateway with FastAPI (Week 8–9) [x] Complete
 
 **Goal.** A typed, streaming HTTP API in front of the agent graph.
 
@@ -647,11 +647,11 @@ if __name__ == "__main__":
 5. Add an in-memory or Redis cache for product lookups; add request IDs to every log line and trace.
 6. Write API tests with `httpx` and a fake LLM so they run fast and deterministically.
 
-**Deliverable.** OpenAPI docs render, streaming works from curl, and API tests pass in CI.
+**Deliverable.** OpenAPI docs render, streaming works from curl, and API tests pass in CI (23/23 tests passing).
 
 **Checkpoint questions.** Why SSE instead of WebSockets here? What does readiness check that liveness does not? How do you test an endpoint that calls an LLM?
 
-## 13. Phase 9 — Frontend with Next.js (Week 9–10) [ ] Planned
+## 13. Phase 9 — Frontend with Next.js (Week 9–10) [x] Complete
 
 **Goal.** A clean, mobile-friendly UI that makes the system usable in a supermarket aisle.
 
@@ -664,17 +664,17 @@ if __name__ == "__main__":
 
 **Steps**
 
-1. Generate a typed API client from the OpenAPI schema.
+1. Generate a typed API client from the OpenAPI schema (`src/lib/api/schema.d.ts`).
 2. Build the scan flow first (it is the core user value), then product page, then chat.
 3. Show streaming progress events (identifying product, checking additives, checking diet) so latency feels intentional.
-4. Make unknown verdicts visually distinct from safe verdicts.
-5. Accessibility basics (labels, contrast, keyboard use) and a Playwright end-to-end test for the main flow.
+4. Make unknown verdicts visually distinct from safe verdicts (dashed borders, unique icons, explicit wording).
+5. Accessibility basics (labels, contrast, keyboard use) and Playwright end-to-end tests for the main flows (12/12 tests passing).
 
-**Deliverable.** A deployed-ready frontend that completes barcode, photo and text flows against the API, with an end-to-end test.
+**Deliverable.** A deployed-ready frontend that completes barcode, photo and text flows against the API, with Playwright E2E tests (`apps/web`).
 
 **Checkpoint questions.** Why keep the profile client-side? How does the UI communicate uncertainty? What happens when the camera permission is denied?
 
-## 14. Phase 10 — Evaluation (continuous, formalized in Week 10) [ ] Planned
+## 14. Phase 10 — Evaluation (continuous, formalized in Week 10) [ ] Next Up
 
 **Goal.** Numbers you can put in the README and defend in an interview.
 

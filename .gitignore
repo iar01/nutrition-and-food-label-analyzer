@@ -39,9 +39,9 @@ data/clean/*
 data/images/*
 !data/images/.gitkeep
 *.parquet
-*.sqlite
-*.sqlite3
-*.db
+*.sqlite*
+*.sqlite3*
+*.db*
 
 # Testing and QA
 .cache

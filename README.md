@@ -60,18 +60,18 @@ flowchart LR
     P4 --> P5["Phase 5: Retrieval ✅"]
     P5 --> P6["Phase 6: Agents ✅"]
     P6 --> P7["Phase 7: MCP ✅"]
-    P7 --> P8["Phase 8: API 🔄"]
-    P8 --> P9["Phase 9: Web ⏹"]
-    P9 --> P10["Phase 10: Evals ⏹"]
+    P7 --> P8["Phase 8: API ✅"]
+    P8 --> P9["Phase 9: Web ✅"]
+    P9 --> P10["Phase 10: Evals 🔄"]
     P10 --> P11["Phase 11: Deploy ⏹"]
 
     classDef done fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff;
     classDef current fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
     classDef pending fill:#6b7280,stroke:#4b5563,stroke-width:1px,color:#fff;
 
-    class P0,P1,P2,P3,P4,P5,P6,P7 done;
-    class P8 current;
-    class P9,P10,P11 pending;
+    class P0,P1,P2,P3,P4,P5,P6,P7,P8,P9 done;
+    class P10 current;
+    class P11 pending;
 ```
 
 ### Phase Progress Checklist
@@ -83,12 +83,36 @@ flowchart LR
 - [x] **Phase 5: Hybrid & Multimodal Retrieval** — Reciprocal Rank Fusion (RRF), cross-encoder reranking (`BAAI/bge-reranker-base`), multimodal query router, golden set ablation benchmarks.
 - [x] **Phase 6: Agents with LangGraph** — Stateful multi-agent graph (router, candidates finder, interactive interrupt picker, parallel ingredient/additive/diet analysts, bounded revision critic, and template fallbacks).
 - [x] **Phase 7: FastMCP Server** — Model Context Protocol server exposing 10 tools, 2 resources, and 2 prompts across stdio & Streamable HTTP transports with bearer-token auth, sliding-window rate limiting, and Claude Desktop integration.
-- [ ] **Phase 8: API Gateway with FastAPI** — Async API, Server-Sent Events (SSE) streaming chat responses, Pydantic v2 schemas.
-- [ ] **Phase 9: Frontend with Next.js** — Mobile-first web application with in-browser camera barcode scanning and streaming chat.
+- [x] **Phase 8: API Gateway with FastAPI** — Async FastAPI gateway, Server-Sent Events (SSE) streaming chat responses, Pydantic v2 schemas, sliding-window rate limiting, CORS, and comprehensive test suite (**23/23 Passed**).
+- [x] **Phase 9: Frontend with Next.js** — Mobile-first web application under `apps/web` (Next.js 16 App Router, Turbopack, Tailwind CSS v4, shadcn/ui) with in-browser ZXing camera scanner, GS1 checksum verification, client-side canvas photo resize & EXIF stripping, disambiguation dialogs, visual certainty hierarchy (dashed borders, unique icons, explicit wording), client-side `localStorage` profile store, same-origin API proxy, and Playwright E2E test suite (**12/12 Passed**).
 - [ ] **Phase 10: Formal Evaluation** — Golden evaluation datasets for allergen detection, retrieval Recall/MRR, and multi-agent tracing.
 - [ ] **Phase 11: Production Hardening & Cloud Deployment** — Multi-stage Docker packaging, GitHub Container Registry, cloud deployment on free tiers.
 
+### Phase 9 Frontend Capabilities & End-to-End Verification
+
+| Component | Scope | Coverage & Details | Status |
+|---|---|---|:---:|
+| **Scanner & Input Modes** (`apps/web/src/components`) | Camera Barcode, Manual Barcode, Photo Upload, Search | Lazy-loaded `@zxing/browser` with rear camera constraints and GS1 check digit filter; HTML5 `<canvas>` photo resize & EXIF stripping | **Verified** |
+| **Visual Language of Certainty** | Verdict chips, Banners, Score badges | 3-valued status with dashed border, unique icons, and plain-English wording for `unknown`; never relies on colour alone | **Verified** |
+| **Analysis Views** | Nutrition facts, Additives, Alternatives, Sources | Interactive nutrition table with FSA traffic lights, highlighted E-numbers, knowledge cards, evidence links, and feedback buttons | **Verified** |
+| **Live Streaming & Disambiguation** | SSE parser, Progress steps, Choice dialog | Resilient buffer parsing across arbitrary packet boundaries, live step progress, interactive product disambiguation | **Verified** |
+| **Secure API Proxy** (`src/app/api/[...path]`) | Next.js server route handler | Allow-listed endpoints, server-only `X-API-Key` injection, SSE streaming pass-through, no client secrets | **Verified** |
+| **Playwright E2E Suite** (`apps/web/e2e/app.spec.ts`) | Mocked API end-to-end tests | 6 tests across Desktop Chrome and Mobile (Pixel 7) emulated devices | **12/12 Passed** |
+| **Build & Type Safety** | Turbopack production build & TypeScript | `tsc --noEmit`, ESLint, `next build` static + dynamic routes | **Verified** |
+
+### Phase 8 FastAPI Gateway Capabilities & Evaluation
+
+| Endpoint / Feature | Method & Route | Details | Status |
+|---|---|---|:---:|
+| **Streaming Chat** | `POST /v1/chat` | Server-Sent Events (SSE) streaming node steps (`step`), product choices (`choose_product`), and final analysis (`final`) | **Verified** |
+| **Product Inspection** | `GET /v1/products/{code}` & `/image` | In-memory cached product metadata and Open Food Facts image proxy | **Verified** |
+| **Candidate Search** | `GET /v1/search` | Fast hybrid text search with brand and allergen query parameters | **Verified** |
+| **User Feedback** | `POST /v1/feedback` | SQLite persistence for thumbs up/down user votes linked to thread IDs | **Verified** |
+| **Security & Rate Limiting** | Auth middleware & SlowAPI | `X-API-Key` verification against constant-time hashes, sliding-window rate limits, 4MB upload guard | **Verified** |
+| **Gateway Test Suite** (`tests/test_api.py`) | Async HTTPX tests | Health, auth rejection, rate limit triggers, SSE streaming, product lookup, upload bounds | **23/23 Passed** |
+
 ### Phase 7 FastMCP Server Capabilities & Evaluation
+
 
 | Component | Scope | Coverage & Details | Status |
 |---|---|---|:---:|
@@ -177,17 +201,40 @@ Run the smoke test:
 pytest -m smoke tests/test_smoke_llm.py
 ```
 
-### 5. Run All Quality Checks
+### 5. Start the FastAPI Backend Gateway
+In a terminal, start the asynchronous FastAPI backend server:
 ```bash
-# Linting & Formatting
-ruff check .
-ruff format --check .
+uv run uvicorn labellens.api.app:create_app --factory --host 127.0.0.1 --port 8000 --reload
+```
+- Health check: `curl http://127.0.0.1:8000/health` (returns `{"status":"ok"}`)
+- Interactive API Docs: `http://127.0.0.1:8000/docs`
 
-# Type checking
-mypy packages
+### 6. Start the Next.js Frontend Web App
+In a new terminal, configure and launch the Next.js frontend:
+```bash
+cd apps/web
+# Copy frontend environment template
+cp .env.example .env.local
+# Run development server
+npm run dev
+```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser to scan barcodes, upload food label photos, or search products.
 
-# Unit tests
+### 7. Run Quality & End-to-End Tests
+```bash
+# Backend unit & integration tests (23 tests)
+uv run pytest tests/test_api.py -q
+
+# Full backend test suite
 pytest -m "not smoke"
+
+# Frontend Playwright E2E tests (Desktop & Mobile)
+cd apps/web
+npm run e2e
+
+# Frontend Typecheck & Lint
+npm run typecheck
+npm run lint
 ```
 
 ---
