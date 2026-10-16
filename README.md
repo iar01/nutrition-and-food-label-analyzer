@@ -248,30 +248,45 @@ cd ../..
 
 ### Step 4: Configure Environment Files
 
-1. **Root Backend Configuration:**
-   Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-   Open `.env` and verify key settings:
-   ```ini
-   APP_ENV=development
-   API_KEYS=your_generated_api_key_here
-   LLM_BASE_URL=http://127.0.0.1:11434/v1
-   LLM_MODEL=qwen2.5:7b
-   QDRANT_URL=http://localhost:6333
-   ```
+#### 1. Generate a Secure API Key
+LabelLens uses token authentication between the Next.js frontend proxy and the FastAPI gateway via the `X-API-Key` request header. You can generate a cryptographically secure random token with any standard utility:
 
-2. **Frontend Configuration:**
-   Copy `apps/web/.env.example` to `apps/web/.env.local`:
-   ```bash
-   cp apps/web/.env.example apps/web/.env.local
-   ```
-   Ensure `LABELLENS_API_KEY` matches one of the values in `API_KEYS`:
-   ```ini
-   LABELLENS_API_URL=http://127.0.0.1:8000
-   LABELLENS_API_KEY=your_generated_api_key_here
-   ```
+```bash
+# Using Python (cross-platform, recommended):
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Or using OpenSSL (Linux / macOS / Git Bash):
+openssl rand -hex 32
+```
+
+> [!IMPORTANT]
+> **Security Notice:** Never hardcode or commit actual API keys or secrets to Git. Placeholders like `your_generated_api_key_here` are used throughout documentation. Real keys belong exclusively in `.env` and `apps/web/.env.local`, both of which are ignored by `.gitignore`.
+
+#### 2. Root Backend Configuration (`.env`)
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+Open `.env` and assign your generated token to `API_KEYS`:
+```ini
+APP_ENV=development
+API_KEYS=your_generated_api_key_here
+LLM_BASE_URL=http://127.0.0.1:11434/v1
+LLM_MODEL=qwen2.5:7b
+QDRANT_URL=http://localhost:6333
+```
+*(To support multiple authorized clients or development keys, provide a comma-separated list: `API_KEYS=key1,key2`)*.
+
+#### 3. Frontend Configuration (`apps/web/.env.local`)
+Copy `apps/web/.env.example` to `apps/web/.env.local`:
+```bash
+cp apps/web/.env.example apps/web/.env.local
+```
+Set `LABELLENS_API_KEY` to the **exact same key** you assigned in `API_KEYS`:
+```ini
+LABELLENS_API_URL=http://127.0.0.1:8000
+LABELLENS_API_KEY=your_generated_api_key_here
+```
 
 ### Step 5: Start Infrastructure Containers
 Launch PostgreSQL 16 and Qdrant:
@@ -492,26 +507,160 @@ nutrition-and-food-label-analyzer/
 
 ## 12. Configuration Reference
 
-The following environment variables can be set in `.env` (backend) or `apps/web/.env.local` (frontend):
+### Environment Variable Architecture & Counts
 
+A common question during setup is: **"How many environment variables exist in the codebase?"**
+
+LabelLens recognizes a total of **45 environment variables** across the application stack, designed around the principle of minimal required configuration:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        FULLSTACK APPLICATION                          │
+│                                                                        │
+│   ┌───────────────────────────┐      ┌─────────────────────────────┐   │
+│   │     Frontend (Next.js)    │      │      Backend (FastAPI)      │   │
+│   │       apps/web/.env.local │      │             .env            │   │
+│   │                           │      │                             │   │
+│   │   • LABELLENS_API_URL     │      │   • 43 Total Variables      │   │
+│   │   • LABELLENS_API_KEY     │      │     - 42 with local defaults│   │
+│   │                           │      │     - 1 required (API_KEYS) │   │
+│   │       [2 Variables]       │      │       [43 Variables]        │   │
+│   └─────────────┬─────────────┘      └──────────────┬──────────────┘   │
+│                 │                                   │                  │
+│                 └─────────── Authenticated ─────────┘                  │
+│                              X-API-Key Bridge                          │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Frontend (`apps/web`): Exactly 2 Variables**
+   The Next.js user interface relies solely on **2 environment variables** in `apps/web/.env.local`:
+   - `LABELLENS_API_URL`: Points to the upstream FastAPI server (default: `http://127.0.0.1:8000`).
+   - `LABELLENS_API_KEY`: The authorization token forwarded in server-side API proxy requests.
+   *(Neither variable uses the `NEXT_PUBLIC_` prefix, keeping your secret token strictly confidential on the Next.js Node server).*
+
+2. **Core Authentication Pairing: Exactly 2 Variables**
+   To connect the frontend web UI to the backend engine, only **2 matching keys** need to be configured:
+   - `API_KEYS` in the root `.env` (backend).
+   - `LABELLENS_API_KEY` in `apps/web/.env.local` (frontend).
+   As long as `LABELLENS_API_KEY` matches one of the comma-separated entries in `API_KEYS`, the entire platform functions smoothly.
+
+3. **Backend Engine (`packages/labellens/config.py`): 43 Variables**
+   The backend uses Pydantic Settings to manage 43 configuration fields across Database, Vector DB, LLM, Embedding models, Storage paths, Observability, and Gateway security.
+   **All 43 backend variables provide local defaults.** You do not need to configure them manually unless customizing ports, directory locations, or switching to an external LLM/vector provider.
+
+---
+
+### How to Generate a Secure API Key
+
+Generate a cryptographically random, collision-resistant token using any standard tool:
+
+```bash
+# Option A: Python (Standard library, cross-platform)
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Option B: OpenSSL (Linux / macOS / Git Bash)
+openssl rand -hex 32
+
+# Option C: Windows PowerShell
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Copy the generated string and paste it into:
+- `.env` -> `API_KEYS=your_generated_api_key_here`
+- `apps/web/.env.local` -> `LABELLENS_API_KEY=your_generated_api_key_here`
+
+> [!WARNING]
+> Never hardcode or commit API keys or credentials into Git. Always use `.env.example` templates and keep actual secrets in gitignored `.env` / `.env.local` files.
+
+---
+
+### Comprehensive Variable Reference Table (All 45 Variables)
+
+#### 1. Core Gateway & Security (5 variables)
 | Variable | Target | Type | Default Value | Purpose |
 |---|---|:---:|---|---|
-| `APP_ENV` | Backend | string | `development` | Environment mode (`development`, `staging`, `production`, `test`). |
-| `LOG_LEVEL` | Backend | string | `INFO` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
-| `API_KEYS` | Backend | string | *(None)* | Comma-separated list of valid secret API keys for gateway authentication. |
-| `LABELLENS_API_URL` | Frontend | string | `http://127.0.0.1:8000` | Upstream FastAPI backend URL reached by Next.js server proxy. |
-| `LABELLENS_API_KEY` | Frontend | string | *(None)* | Secret API key forwarded by the server proxy to the backend. |
-| `LLM_BASE_URL` | Backend | string | `http://localhost:11434/v1` | OpenAI-compatible endpoint (Ollama or cloud provider). |
-| `LLM_MODEL` | Backend | string | `qwen2.5:7b` | Model identifier used for reasoning, synthesis, and repair. |
-| `LLM_API_KEY` | Backend | string | `ollama` | API key for the LLM endpoint (`ollama` for local runner). |
-| `QDRANT_URL` | Backend | string | `http://localhost:6333` | HTTP endpoint for the Qdrant vector database. |
-| `TEXT_EMBEDDING_MODEL`| Backend | string | `BAAI/bge-small-en-v1.5` | Dense text embedding model for search and knowledge retrieval. |
-| `SPARSE_EMBEDDING_MODEL`| Backend | string | `Qdrant/bm25` | Sparse lexical model used for FastEmbed BM25 indexing. |
-| `IMAGE_EMBEDDING_MODEL`| Backend | string | `ViT-B-32` | OpenCLIP architecture for multimodal packaging image search. |
-| `RERANKER_MODEL` | Backend | string | `BAAI/bge-reranker-base` | Cross-encoder model used for second-stage reciprocal reranking. |
-| `CORS_ORIGINS` | Backend | string | `http://localhost:3000` | Allowed CORS origins for browser access. |
-| `API_RATE_LIMIT_PER_MINUTE` | Backend | int | `60` | Sliding-window requests allowed per minute per client key/IP. |
-| `API_MAX_CONCURRENT_RUNS` | Backend | int | `2` | Maximum concurrent LangGraph agent executions allowed. |
+| `API_KEYS` | Backend | string | *(None / User Generated)* | Comma-separated list of valid client API keys for `X-API-Key` authentication. |
+| `CORS_ORIGINS` | Backend | string | `http://localhost:3000` | Comma-separated list of allowed browser origins for CORS. |
+| `API_MAX_UPLOAD_BYTES` | Backend | int | `4000000` | Maximum image upload file size (4 MB). |
+| `API_RATE_LIMIT_PER_MINUTE` | Backend | int | `60` | Maximum requests permitted per client key or IP per minute. |
+| `API_MAX_CONCURRENT_RUNS` | Backend | int | `2` | Maximum concurrent LangGraph reasoning runs allowed simultaneously. |
+
+#### 2. Frontend Next.js Client (2 variables)
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `LABELLENS_API_URL` | Frontend | string | `http://127.0.0.1:8000` | Target FastAPI gateway URL for Next.js server-side proxy route. |
+| `LABELLENS_API_KEY` | Frontend | string | *(None / User Generated)* | Secret API key forwarded to FastAPI gateway. Matches a key in `API_KEYS`. |
+
+#### 3. Application Environment & Logging (2 variables)
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `APP_ENV` | Backend | string | `development` | Deployment environment: `development`, `staging`, `production`, `test`. |
+| `LOG_LEVEL` | Backend | string | `INFO` | Console log verbosity: `DEBUG`, `INFO`, `WARNING`, `ERROR`. |
+
+#### 4. PostgreSQL Relational Database (7 variables)
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `POSTGRES_USER` | Backend | string | `postgres` | Database administrator username. |
+| `POSTGRES_PASSWORD` | Backend | string | `postgres` | Database user password. |
+| `POSTGRES_DB` | Backend | string | `labellens` | PostgreSQL database name. |
+| `POSTGRES_HOST` | Backend | string | `localhost` | Database host network address. |
+| `POSTGRES_PORT` | Backend | int | `5432` | Database TCP listener port. |
+| `DATABASE_URL` | Backend | string | `postgresql+asyncpg://...` | Asynchronous SQLAlchemy connection string used by FastAPI. |
+| `SYNC_DATABASE_URL` | Backend | string | `postgresql://...` | Synchronous SQLAlchemy connection string used by Alembic migrations. |
+
+#### 5. Qdrant Vector Database (7 variables)
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `QDRANT_HOST` | Backend | string | `localhost` | Qdrant vector database hostname. |
+| `QDRANT_PORT` | Backend | int | `6333` | HTTP REST API listener port. |
+| `QDRANT_GRPC_PORT` | Backend | int | `6334` | High-throughput gRPC listener port. |
+| `QDRANT_URL` | Backend | string | `http://localhost:6333` | Complete HTTP endpoint URL for Qdrant client. |
+| `QDRANT_API_KEY` | Backend | string | *(None)* | Optional API key for remote managed Qdrant Cloud clusters. |
+| `PRODUCTS_COLLECTION` | Backend | string | `products` | Collection name for multimodal product embeddings. |
+| `KNOWLEDGE_COLLECTION` | Backend | string | `knowledge` | Collection name for additives and dietary regulation cards. |
+
+#### 6. LLM Inference Provider (5 variables)
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `LLM_BASE_URL` | Backend | string | `http://localhost:11434/v1` | OpenAI-compatible endpoint URL (Ollama, vLLM, or cloud provider). |
+| `LLM_MODEL` | Backend | string | `qwen2.5:7b` | Model name identifier used for analysis, OCR repair, and synthesis. |
+| `LLM_API_KEY` | Backend | string | `ollama` | API authorization key for upstream LLM provider. |
+| `LLM_TEMPERATURE` | Backend | float | `0.2` | Generation temperature for structured factual outputs. |
+| `LLM_TIMEOUT_SECONDS` | Backend | float | `60.0` | Maximum network timeout for inference completions. |
+
+#### 7. Embedding & Reranker Models (5 variables)
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `TEXT_EMBEDDING_MODEL`| Backend | string | `BAAI/bge-small-en-v1.5` | Dense text embedding model for hybrid semantic search. |
+| `SPARSE_EMBEDDING_MODEL`| Backend | string | `Qdrant/bm25` | Sparse lexical model for FastEmbed BM25 inverted indices. |
+| `IMAGE_EMBEDDING_MODEL`| Backend | string | `ViT-B-32` | OpenCLIP vision transformer architecture for packaging search. |
+| `IMAGE_EMBEDDING_PRETRAINED`| Backend | string | `openai` | Pretrained weights identifier for OpenCLIP vision model. |
+| `RERANKER_MODEL` | Backend | string | `BAAI/bge-reranker-base` | Cross-encoder model for reciprocal rank fusion scoring. |
+
+#### 8. Data Storage & Artifact Paths (7 variables)
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `CLEAN_PRODUCTS_PATH` | Backend | Path | `data/clean/products.parquet` | Cleaned product dataset Parquet file. |
+| `IMAGES_DIR` | Backend | Path | `data/images` | Local filesystem directory for downloaded packaging images. |
+| `IMAGE_KEYS_PATH` | Backend | Path | `data/raw/data_keys.gz` | Open Food Facts bulk image key archive path. |
+| `EMBEDDINGS_DIR` | Backend | Path | `data/embeddings` | Storage location for serialized vector arrays. |
+| `PRODUCT_DB_PATH` | Backend | Path | `data/interim/products.duckdb` | DuckDB database path for fast columnar transformations. |
+| `CHECKPOINT_DB_PATH` | Backend | Path | `data/checkpoints.sqlite` | SQLite database path for LangGraph agent memory checkpoints. |
+| `FEEDBACK_DB_PATH` | Backend | Path | `data/feedback.sqlite` | SQLite database path for user thumbs-up/down feedback. |
+
+#### 9. Model Context Protocol (MCP) (2 variables)
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `MCP_URL` | Backend | string | `http://127.0.0.1:8765/mcp` | SSE endpoint URL for FastMCP server. |
+| `MCP_AUTH_TOKEN` | Backend | string | *(None)* | Optional Bearer authorization token for secure MCP tools. |
+
+#### 10. Observability & Tracing (3 variables)
+| Variable | Target | Type | Default Value | Purpose |
+|---|---|:---:|---|---|
+| `LANGSMITH_TRACING` | Backend | bool | `false` | Enable LangSmith tracing for LangGraph workflow execution. |
+| `LANGSMITH_API_KEY` | Backend | string | *(None)* | LangSmith project API authorization key. |
+| `LANGSMITH_PROJECT` | Backend | string | `labellens` | Project grouping identifier in LangSmith dashboard. |
 
 ---
 
