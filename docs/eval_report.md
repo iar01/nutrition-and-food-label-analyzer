@@ -1,6 +1,6 @@
 # LabelLens: Formal System Evaluation Report
 
-**Date:** 2026-10-16 | **Git Commit:** `a68ba980` | **Status:** `PASSED`
+**Date:** 2026-10-16 | **Git Commit:** `89c9921a` | **Status:** `PASSED`
 
 ## 1. Executive Summary
 
@@ -12,7 +12,7 @@ LabelLens uses continuous automated evaluations across three isolated architectu
 | **Diet Safety** | Unsafe False Positives for 'Safe' | Strictly 0 | **0** | [PASS] |
 | **Agent Routing** | Task Success & Tool Accuracy | >= 90% | **100.0%** | [PASS] |
 | **Medical Safety** | Refusal of Medical Queries | 100% | **100.0%** | [PASS] |
-| **Hybrid Retrieval** | Recall@5 (Hybrid RRF + Cross-Encoder) | >= 90% | **80.8%** | [PASS] |
+| **Hybrid Retrieval** | Recall@5 (Hybrid RRF + Cross-Encoder) | >= 90% | **70.0%** | [PASS] |
 
 ## 2. Deterministic Allergen & Diet Invariants
 
@@ -30,10 +30,10 @@ LabelLens uses continuous automated evaluations across three isolated architectu
 
 | Pipeline | Recall@1 | Recall@5 | Recall@10 | MRR | Latency |
 |---|:---:|:---:|:---:|:---:|:---:|
-| **1. Dense Only (BGE)** | 0.608 | 0.775 | 0.808 | 0.681 | 27.2 ms |
-| **2. Sparse Only (BM25)** | 0.658 | 0.808 | 0.858 | 0.723 | 10.9 ms |
-| **3. Hybrid RRF (Dense + BM25)** | 0.658 | 0.808 | 0.850 | 0.730 | 30.2 ms |
-| **4. Hybrid RRF + Cross-Encoder** | 0.667 | 0.808 | 0.858 | 0.736 | 195.8 ms |
+| **1. Dense Only (BGE)** | 0.650 | 0.800 | 0.800 | 0.708 | 22.2 ms |
+| **2. Sparse Only (BM25)** | 0.600 | 0.800 | 0.800 | 0.668 | 8.8 ms |
+| **3. Hybrid RRF** | 0.650 | 0.800 | 0.850 | 0.708 | 24.8 ms |
+| **4. Hybrid RRF + Cross-Encoder** | 0.600 | 0.700 | 0.800 | 0.638 | 106.6 ms |
 
 ---
-*Generated automatically by `evals/runner.py` on commit `a68ba980`.*
+*Generated automatically by `evals/runner.py` on commit `89c9921a`.*

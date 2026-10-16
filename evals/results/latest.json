@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-10-16T17:29:34.723502+00:00",
+  "timestamp": "2026-10-16T19:04:07.886061+00:00",
   "git": {
-    "commit": "a68ba980",
-    "full_commit": "a68ba980e494eb0b0818a606fa2adb638b32446f",
+    "commit": "89c9921a",
+    "full_commit": "89c9921a278fb12bd6034b9007303f6d93037466",
     "branch": "master"
   },
   "environment": {
@@ -30,36 +30,160 @@
     },
     "retrieval": [
       {
+        "num_queries": 20.0,
+        "recall_1": 0.65,
+        "recall_5": 0.8,
+        "recall_10": 0.8,
+        "mrr": 0.7083,
+        "ndcg_10": 0.7315,
+        "latency_avg_ms": 22.24,
+        "latency_p50_ms": 20.83,
+        "latency_p90_ms": 28.15,
+        "latency_p95_ms": 31.75,
         "pipeline": "1. Dense Only (BGE)",
-        "recall_1": 0.608,
-        "recall_5": 0.775,
-        "recall_10": 0.808,
-        "mrr": 0.681,
-        "latency_avg_ms": 27.2
+        "breakdown_by_query_type": {
+          "brand_and_name": {
+            "count": 5,
+            "recall_1": 0.8,
+            "recall_5": 1.0,
+            "mrr": 0.8667
+          },
+          "context_lookup": {
+            "count": 5,
+            "recall_1": 0.6,
+            "recall_5": 0.8,
+            "mrr": 0.7
+          },
+          "description_only": {
+            "count": 5,
+            "recall_1": 0.2,
+            "recall_5": 0.4,
+            "mrr": 0.2667
+          },
+          "typo": {
+            "count": 5,
+            "recall_1": 1.0,
+            "recall_5": 1.0,
+            "mrr": 1.0
+          }
+        }
       },
       {
+        "num_queries": 20.0,
+        "recall_1": 0.6,
+        "recall_5": 0.8,
+        "recall_10": 0.8,
+        "mrr": 0.6683,
+        "ndcg_10": 0.7009,
+        "latency_avg_ms": 8.8,
+        "latency_p50_ms": 5.34,
+        "latency_p90_ms": 14.51,
+        "latency_p95_ms": 14.6,
         "pipeline": "2. Sparse Only (BM25)",
-        "recall_1": 0.658,
-        "recall_5": 0.808,
-        "recall_10": 0.858,
-        "mrr": 0.723,
-        "latency_avg_ms": 10.9
+        "breakdown_by_query_type": {
+          "brand_and_name": {
+            "count": 5,
+            "recall_1": 0.8,
+            "recall_5": 1.0,
+            "mrr": 0.8667
+          },
+          "context_lookup": {
+            "count": 5,
+            "recall_1": 0.4,
+            "recall_5": 0.8,
+            "mrr": 0.5667
+          },
+          "description_only": {
+            "count": 5,
+            "recall_1": 0.2,
+            "recall_5": 0.4,
+            "mrr": 0.24
+          },
+          "typo": {
+            "count": 5,
+            "recall_1": 1.0,
+            "recall_5": 1.0,
+            "mrr": 1.0
+          }
+        }
       },
       {
-        "pipeline": "3. Hybrid RRF (Dense + BM25)",
-        "recall_1": 0.658,
-        "recall_5": 0.808,
+        "num_queries": 20.0,
+        "recall_1": 0.65,
+        "recall_5": 0.8,
         "recall_10": 0.85,
-        "mrr": 0.73,
-        "latency_avg_ms": 30.2
+        "mrr": 0.7079,
+        "ndcg_10": 0.7417,
+        "latency_avg_ms": 24.82,
+        "latency_p50_ms": 22.06,
+        "latency_p90_ms": 30.88,
+        "latency_p95_ms": 31.42,
+        "pipeline": "3. Hybrid RRF",
+        "breakdown_by_query_type": {
+          "brand_and_name": {
+            "count": 5,
+            "recall_1": 0.8,
+            "recall_5": 1.0,
+            "mrr": 0.8667
+          },
+          "context_lookup": {
+            "count": 5,
+            "recall_1": 0.6,
+            "recall_5": 0.8,
+            "mrr": 0.7
+          },
+          "description_only": {
+            "count": 5,
+            "recall_1": 0.2,
+            "recall_5": 0.4,
+            "mrr": 0.265
+          },
+          "typo": {
+            "count": 5,
+            "recall_1": 1.0,
+            "recall_5": 1.0,
+            "mrr": 1.0
+          }
+        }
       },
       {
+        "num_queries": 20.0,
+        "recall_1": 0.6,
+        "recall_5": 0.7,
+        "recall_10": 0.8,
+        "mrr": 0.6384,
+        "ndcg_10": 0.6755,
+        "latency_avg_ms": 106.61,
+        "latency_p50_ms": 101.57,
+        "latency_p90_ms": 139.96,
+        "latency_p95_ms": 178.61,
         "pipeline": "4. Hybrid RRF + Cross-Encoder",
-        "recall_1": 0.667,
-        "recall_5": 0.808,
-        "recall_10": 0.858,
-        "mrr": 0.736,
-        "latency_avg_ms": 195.8
+        "breakdown_by_query_type": {
+          "brand_and_name": {
+            "count": 5,
+            "recall_1": 1.0,
+            "recall_5": 1.0,
+            "mrr": 1.0
+          },
+          "context_lookup": {
+            "count": 5,
+            "recall_1": 0.4,
+            "recall_5": 0.6,
+            "mrr": 0.4786
+          },
+          "description_only": {
+            "count": 5,
+            "recall_1": 0.2,
+            "recall_5": 0.2,
+            "mrr": 0.225
+          },
+          "typo": {
+            "count": 5,
+            "recall_1": 0.8,
+            "recall_5": 1.0,
+            "mrr": 0.85
+          }
+        }
       }
     ]
   },

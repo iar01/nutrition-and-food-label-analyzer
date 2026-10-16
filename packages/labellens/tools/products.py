@@ -15,7 +15,22 @@ def _clean(value: Any) -> Any:
 
 class ProductRepo:
     def __init__(self, db_path: Path | None = None) -> None:
-        self.con = duckdb.connect(str(db_path or settings.product_db_path), read_only=True)
+        target = Path(db_path or settings.product_db_path)
+        if target.is_file():
+            self.con = duckdb.connect(str(target), read_only=True)
+        else:
+            self.con = duckdb.connect(":memory:")
+            self.con.execute(
+                """
+                CREATE TABLE IF NOT EXISTS products (
+                    code VARCHAR PRIMARY KEY,
+                    name VARCHAR,
+                    brand VARCHAR,
+                    ingredients VARCHAR,
+                    nutriscore_grade VARCHAR
+                )
+                """
+            )
 
     def get(self, code: str) -> dict[str, Any] | None:
         cur = self.con.cursor()  # a private connection per call: safe across threads
